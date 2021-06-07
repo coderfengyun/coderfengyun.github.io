@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<!--[if lte IE 8 ]>
+<html class="ie" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
+<![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!-->
+<!--
+***************  *      *     *
+      8          *    *       *
+      8          *  *         *
+      8          **           *
+      8          *  *         *
+      8          *    *       *
+      8          *      *     *
+      8          *        *   ***********    -----Theme By Kieran(http://go.kieran.top)
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN" lang="zh-CN">
+<!--<![endif]-->
+
+<head>
+  <title>Hexo</title>
+  <!-- Meta data -->
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content="Hexo">
+    <meta name="author" content="coderfengyun">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+
+    <!-- Favicon, (keep icon in root folder) -->
+    <link rel="Shortcut Icon" href="/img/favicon.ico" type="image/ico">
+
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="stylesheet" href="/css/all.css" media="screen" type="text/css">
+    
+    <link rel="stylesheet" href="/highlightjs/vs.css" type="text/css">
+    
+
+    <!--[if IE 8]>
+    <link rel="stylesheet" type="text/css" href="/css/ie8.css" />
+    <![endif]-->
+
+    <!-- jQuery | Load our jQuery, with an alternative source fallback to a local version if request is unavailable -->
+    <script src="/js/jquery-1.11.1.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/jquery-1.11.1.min.js"><\/script>')</script>
+
+    <!-- Load these in the <head> for quicker IE8+ load times -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.min.js"></script>
+    <script src="/js/respond.min.js"></script>
+    <![endif]-->
+
+  
+  
+  
+
+  <style>.col-md-8.col-md-offset-2.opening-statement img{display:none;}</style>
+</head>
+
+<!--
+<body class="home-template">
+-->
+<body id="index" class="lightnav animsition">
+
+      <!-- ============================ Off-canvas navigation =========================== -->
+
+    <div class="sb-slidebar sb-right sb-style-overlay sb-momentum-scrolling">
+        <div class="sb-close" aria-label="Close Menu" aria-hidden="true">
+            <img src="/img/close.png" alt="Close"/>
+        </div>
+        <!-- Lists in Slidebars -->
+        <ul class="sb-menu">
+            <li><a href="/" class="animsition-link" title="Home">Home</a></li>
+            <li><a href="/archives" class="animsition-link" title="archive">archives</a></li>
+            <!-- Dropdown Menu -->
+			 
+            <li>
+                <a class="sb-toggle-submenu">Works<span class="sb-caret"></span></a>
+                <ul class="sb-submenu">
+                    
+                        <li><a href="/" target="_BLANK" class="animsition-link">AAA</a></li>
+                    
+                        <li><a href="/atom.xml" target="_BLANK" class="animsition-link">BBB</a></li>
+                    
+                </ul>
+            </li>
+            
+            
+        	<li>
+        		<a class="sb-toggle-submenu">Categories<span class="sb-caret"></span></a>
+            	<ul class="sb-submenu">
+				  	
+				    <li><a href="/categories/Java/" class="animsition-link">Java<small>(1)</small></a></li>
+				    
+				    <li><a href="/categories/分布式系统/" class="animsition-link">分布式系统<small>(2)</small></a></li>
+				    
+				    <li><a href="/categories/存储系统/" class="animsition-link">存储系统<small>(1)</small></a></li>
+				    
+				    <li><a href="/categories/技术框架/" class="animsition-link">技术框架<small>(2)</small></a></li>
+				    
+				    <li><a href="/categories/架构工具/" class="animsition-link">架构工具<small>(1)</small></a></li>
+				    
+				    <li><a href="/categories/架构设计/" class="animsition-link">架构设计<small>(1)</small></a></li>
+				    
+				    <li><a href="/categories/自动化测试/" class="animsition-link">自动化测试<small>(2)</small></a></li>
+				    
+				    <li><a href="/categories/重构/" class="animsition-link">重构<small>(1)</small></a></li>
+				    
+				</ul>
+        	</li>
+			
+            
+            <li>
+                <a class="sb-toggle-submenu">Links<span class="sb-caret"></span></a>
+                <ul class="sb-submenu">
+                    
+                    <li><a href="http://go.kieran.top/" target="_blank" rel="noopener" class="animsition-link">Kieran</a></li>
+                    
+                    <li><a href="http://domain.com/" target="_blank" rel="noopener" class="animsition-link">Name</a></li>
+                    
+                </ul>
+            </li>
+            
+        </ul>
+        <!-- Lists in Slidebars -->
+        <ul class="sb-menu secondary">
+            
+            <li><a href="/about.html" class="animsition-link" title="about">About</a></li>
+            <li><a href="/atom.xml" class="animsition-link" title="rss">RSS</a></li>
+        </ul>
+    </div>
+    
+    <!-- ============================ END Off-canvas navigation =========================== -->
+
+    <!-- ============================ #sb-site Main Page Wrapper =========================== -->
+
+    <div id="sb-site">
+        <!-- #sb-site - All page content should be contained within this id, except the off-canvas navigation itself -->
+
+        <!-- ============================ Header & Logo bar =========================== -->
+
+        <div id="navigation" class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <!-- Nav logo -->
+                    <div class="logo">
+                        <a href="/" title="Logo" class="animsition-link">
+                         <img src="/img/logo.png" alt="Logo" width="35px;"/> 
+                        </a>
+                    </div>
+                    <!-- // Nav logo -->
+                    <!-- Info-bar -->
+                    <nav>
+                        <ul class="nav">
+                            <li><a href="/" class="animsition-link">Hexo</a></li>
+                            <li class="nolink"><span>Always </span>Creative.</li>
+                            
+                            <li><a href="https://github.com/" title="Github" target="_blank"><i class="icon-github"></i></a></li>
+                            
+                            
+                            <li><a href="https://twitter.com/" title="Twitter" target="_blank"><i class="icon-twitter"></i></a></li>
+                            
+                            
+                            <li><a href="https://www.facebook.com/" title="Facebook" target="_blank"><i class="icon-facebook"></i></a></li>
+                            
+                            
+                            <li><a href="https://google.com/" title="Google-Plus" target="_blank"><i class="icon-google-plus"></i></a></li>
+                            
+                            
+                            <li><a href="http://weibo.com/" title="Sina-Weibo" target="_blank"><i class="icon-sina-weibo"></i></a></li>
+                            
+                            <li class="nolink"><span>Welcome!</span></li>
+                        </ul>
+                    </nav>
+                    <!--// Info-bar -->
+                </div>
+                <!-- // .container -->
+                <div class="learnmore sb-toggle-right">More</div>
+                <button type="button" class="navbar-toggle menu-icon sb-toggle-right" title="More">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar before"></span>
+                <span class="icon-bar main"></span>
+                <span class="icon-bar after"></span>
+                </button>
+            </div>
+            <!-- // .navbar-inner -->
+        </div>
+
+        <!-- ============================ Header & Logo bar =========================== -->
+
+
+      <!-- ============================ Hero Image =========================== -->
+
+<section id="hero" class="scrollme">
+    <div class="container-fluid element-img" style="background: url(/img/bg_img.jpg) no-repeat center center fixed;background-size: cover">
+        <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 vertical-align cover boost text-center">
+                <div class="center-me animateme" data-when="exit" data-from="0" data-to="0.6" data-opacity="0" data-translatey="100">
+                    <div>
+                        
+                        <h2>YOU'VE MADE A <span>BRAVE</span> DECISION, WELCOME.</h2>
+                        <p></p>
+                        
+                        <h2></h2>
+                        <p>每一个不曾起舞的日子都是对生命的辜负。</p>
+                        
+
+                    </div>
+                </div>
+            </div>
+            <!-- // .col-md-12 -->
+        </div>
+        <div class="herofade beige-dk"></div>
+    </div>
+</section>
+
+<!-- Height spacing helper -->
+<div class="heightblock"></div>
+<!-- // End height spacing helper -->
+
+<!-- ============================ END Hero Image =========================== -->
+<!-- ============================ Content =========================== -->
+
+<section id="intro">
+    <div class="container">
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2021/06/06/test-series.test-behavior-not-implementation/">测试行为而不是实现</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2021-06-05T16:00:00.000Z" itemprop="datePublished">
+          2021-06-06
+      </time>
+    
+    
+    | 
+    <a href='/tags/自动化测试/'>自动化测试</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        你的Calculator类是你最受欢迎的开源项目之一，拥有大量的用户。12345public class Calculator &#123;  public int add(int a, int b) &#123;    return a + b;  &#125;&#125;你也对该类做了测试，确保其正确工作。12345public void testAdd() &#123;  assertEquals(3, calculator.ad
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2021/06/06/test-series.test-behavior-not-implementation/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2021/06/06/test-series.test-interface-not-implementation/">测试接口而不是实现</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2021-06-05T16:00:00.000Z" itemprop="datePublished">
+          2021-06-06
+      </time>
+    
+    
+    | 
+    <a href='/tags/自动化测试/'>自动化测试</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        这个类真的需要测试吗？12345class UserInfoValidator &#123;  public void validate(UserInfo info) &#123;    if (info.getDateOfBirth().isInFuture()) &#123; throw new ValidationException()); &#125;  &#125;&#125;
+乍一看，这个类的方法包含了一些逻辑，所以可能最好
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2021/06/06/test-series.test-interface-not-implementation/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2018/01/25/failure_mode_in_distributed_system/">分布式系统中的失败模式</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2018-01-24T16:00:00.000Z" itemprop="datePublished">
+          2018-01-25
+      </time>
+    
+    
+    | 
+    <a href='/tags/分布式系统/'>分布式系统</a>,
+    
+    <a href='/tags/失败模型/'>失败模型</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        由于最近在项目中碰到了由于cpu stuck引起的系统消息系统故障，想要系统性的理解分布式系统中存在的故障模式。在”Fault-Tolerant Real-Time Systems: The Problem of Replica Determinism”书中，介绍了四种分布式系统中的failure模式。
+# 一、分布式系统中存在失败模式 
+
+Byzantine or arbitrary failure (拜占庭故障) 在这种失败模式中，
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2018/01/25/failure_mode_in_distributed_system/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2017/12/28/一致性系列概述/">一致性系列概述</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2017-12-27T16:00:00.000Z" itemprop="datePublished">
+          2017-12-28
+      </time>
+    
+    
+    | 
+    <a href='/tags/分布式系统/'>分布式系统</a>,
+    
+    <a href='/tags/一致性/'>一致性</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。
+归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A write v时，B何时可以read到v的变化; A write v 与B write v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。
+一致性从最根本上讲，只包含两个原则：1、可见性原则；2、原子性
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2017/12/28/一致性系列概述/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2016/10/23/记一次URLClassLoader问题追查/">Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2016-10-22T16:00:00.000Z" itemprop="datePublished">
+          2016-10-23
+      </time>
+    
+    
+    | 
+    <a href='/tags/Spring/'>Spring</a>,
+    
+    <a href='/tags/SpringBoot/'>SpringBoot</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        场景描述：问题的发生来源一个工作中的问题，简要描述是在一个多module的maven project中，job module依赖server module完成工作，在intelliJ中执行良好，但是用maven package打包的时候，就会报找不到server module中对应的类。
+于是乎，楼主开始了问题的排查。
+怀疑是maven的锅 首先，怀疑是本地maven问题，尝试了各种解决办法，如maven -U, 删除本地maven库中
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2016/10/23/记一次URLClassLoader问题追查/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2016/03/19/Spring-Boot使用指南/">SpringBoot哲学</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2016-03-18T16:00:00.000Z" itemprop="datePublished">
+          2016-03-19
+      </time>
+    
+    
+    | 
+    <a href='/tags/Spring/'>Spring</a>,
+    
+    <a href='/tags/SpringBoot/'>SpringBoot</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        Spring-Annotation的哲学是要有开关：
+
+例如当你使用@ConfigurationProperties时，必须要搭配EnableConfigurationProperties 
+
+例如当你使用AutoConfiguration配置在META-INF中时，必须搭配使用@EnableAutoConfiguration
+
+例如当在测试用例中要使用某些bean上的AOP方法生效（通过ASPECTJ实现的），则可以对改bean打上@
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2016/03/19/Spring-Boot使用指南/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2016/01/12/refactoring-denpendency-module/">重构包(模块)之间的依赖关系</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2016-01-11T16:00:00.000Z" itemprop="datePublished">
+          2016-01-12
+      </time>
+    
+    
+    | 
+    <a href='/tags/软件工程/'>软件工程</a>,
+    
+    <a href='/tags/重构/'>重构</a>,
+    
+    <a href='/tags/架构工具/'>架构工具</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        本文翻译自Martin Fowler博客，原文地址
+
+
+
+
+		
+		var gitalkConfig = {"clientID":"c997773fd24266bce118","clientSecret":"cc7288358d3e52413255b40ebd391c4e55210ace","repo":"https://github.com/coderfengyun/coderfengyun.github.io","owner":"
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2016/01/12/refactoring-denpendency-module/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2015/12/16/传说中的mysql5.6/">传说中的MySQL 5.6</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2015-12-15T16:00:00.000Z" itemprop="datePublished">
+          2015-12-16
+      </time>
+    
+    
+    | 
+    <a href='/tags/MySQL/'>MySQL</a>,
+    
+    <a href='/tags/存储系统/'>存储系统</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        从哪说起，先从MySQL的官方文档说起。
+当MySQL 5.5在全世界范围内广泛部署与使用之后，架构师们都在翘首以盼，期待着MySQL 5.6的将临。MySQL 5.6在MySQL 5.5的基础上开发完成。
+今年MySQL的会议上，会听到如下的主题：
+
+优化器全面提高性能
+InnoDB提高事务吞吐
+全新的NoSQL memcached APIs
+查询和超大表分区优化
+replication多方面提高
+PERFORMANCE_SCHEMA
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2015/12/16/传说中的mysql5.6/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/">在验证程序输入时使用Notification来替代Exception</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2015-07-15T16:00:00.000Z" itemprop="datePublished">
+          2015-07-16
+      </time>
+    
+    
+    | 
+    <a href='/tags/软件工程/'>软件工程</a>,
+    
+    <a href='/tags/重构/'>重构</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        本文翻译自Martin Fowler博客，原文地址
+如果你要验证一些输入数据，通常不应该选择用Exception的方式来表明验证失败。我想仔细的描述如何使用Notification模式来重构这样的代码。
+目录：什么时候使用此项重构
+从哪里开始构建一个Notification
+分解检验方法验证数字
+验证日期*缩减调用栈
+我最近正在琢磨一些处理传入Json消息的验证代码。就像下面这个。1234567891011121314public vo
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 opening-statement">
+                <div class="col-md-4">
+                    <h3><a href="/2015/06/18/Richard成熟度模型/">Richard成熟度模型</a></h3>
+                    <span>
+                        <span class="post-meta">
+      <time datetime="2015-06-17T16:00:00.000Z" itemprop="datePublished">
+          2015-06-18
+      </time>
+    
+    
+    | 
+    <a href='/tags/REST/'>REST</a>,
+    
+    <a href='/tags/架构设计/'>架构设计</a>
+    
+    
+</span>
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                      
+                        Leonard Richardson的模型将REST的基本元素分解到三个步骤当中。这三个步骤包括：资源（resources），http谓词（get, post, put, delete, head, option），超链接控制。
+注：文章译自Martin Fowler博客,原文链接.最近我（Martin Fowler）阅读了一本《Rest In Praces》，我的同事们写的一本书。他们的目的是解释如何使用Rest Web Servic
+                      
+                    </p>
+                    
+                    <p class="pull-right readMore">
+                        <a href="/2015/06/18/Richard成熟度模型/">Read More...</a>
+                    </p>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr class="nogutter">
+            </div>
+        </div>
+        
+        <nav class="pagination" role="pagination">
+          
+          <a class="pull-right" href="/page/2/">Older Posts →</a>
+        </nav>
+    </div>
+</section>
+<section id="statement">
+    <div class="container text-center wow fadeInUp" data-wow-delay="0.5s">
+        <div class="row">
+            <p>虽然还没想好写点什么，但是总觉得这里放句话比较和谐。</p>
+        </div>
+    </div>
+</section>
+<!-- ============================ END Content =========================== -->
+
+      
+<!-- ============================ Footer =========================== -->
+
+<footer>
+    <div class="container">
+            <div class="copy">
+                <p>
+                    &copy; 2014<script>new Date().getFullYear()>2010&&document.write("-"+new Date().getFullYear());</script>, Content By coderfengyun. All Rights Reserved.
+                </p>
+                <p>Theme By <a href="//go.kieran.top" target="_blank" rel="noopener" style="color: #767D84">Kieran</a></p>
+            </div>
+            <div class="social">
+                <ul>
+                    
+                    <li><a href="https://github.com/" title="Github" target="_blank"><i class="icon-github"></i></a>&nbsp;</li>
+                    
+                    
+                    <li><a href="https://twitter.com/" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>&nbsp;</li>
+                    
+                    
+                    <li><a href="https://www.facebook.com/" title="Facebook" target="_blank"><i class="icon-facebook"></i></a>&nbsp;</li>
+                    
+                    
+                    <li><a href="https://google.com/" title="Google-Plus" target="_blank"><i class="icon-google-plus"></i></a>&nbsp;</li>
+                    
+                    
+                    <li><a href="http://weibo.com/" title="Sina-Weibo" target="_blank"><i class="icon-sina-weibo"></i></a>&nbsp;</li>
+                    
+                </ul>
+            </div>
+            <div class="clearfix"> </div>
+        </div>
+</footer>
+
+<!-- ============================ END Footer =========================== -->
+      <!-- Load our scripts -->
+<!-- Resizable 'on-demand' full-height hero -->
+<script type="text/javascript">
+    var resizeHero = function () {
+        var hero = $(".cover,.heightblock"),
+            window1 = $(window);
+        hero.css({
+            "height": window1.height()
+        });
+    };
+
+    resizeHero();
+
+    $(window).resize(function () {
+        resizeHero();
+    });
+</script>
+<script src="/js/plugins.min.js"></script><!-- Bootstrap core and concatenated plugins always load here -->
+<script src="/js/scripts.js"></script><!-- Theme scripts -->
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$('#intro').find('img').each(function(){
+  var alt = this.alt;
+
+  if (alt){
+    $(this).after('<span class="caption" style="display:none">' + alt + '</span>');
+  }
+
+  $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox" rel="gallery" />');
+});
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+
+      
+</body>
+</html>
