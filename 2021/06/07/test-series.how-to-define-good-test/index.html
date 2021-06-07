@@ -17,7 +17,7 @@
 <!--<![endif]-->
 
 <head>
-  <title>一致性系列概述 | Hexo</title>
+  <title>怎样才能称之为好的测试用例 | Hexo</title>
   <!-- Meta data -->
     <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -196,28 +196,34 @@
         <div class="row col-md-offset-2">
             <div class="col-md-8">
     			<span class="post-meta">
-      <time datetime="2017-12-27T16:00:00.000Z" itemprop="datePublished">
-          2017-12-28
+      <time datetime="2021-06-06T16:00:00.000Z" itemprop="datePublished">
+          2021-06-07
       </time>
     
     
     | 
-    <a href='/tags/分布式系统/'>分布式系统</a>,
-    
-    <a href='/tags/一致性/'>一致性</a>
+    <a href='/tags/自动化测试/'>自动化测试</a>
     
     
 </span>
-                <h1>一致性系列概述</h1>
+                <h1>怎样才能称之为好的测试用例</h1>
             </div>
         </div>
         <div class="col-md-8 col-md-offset-2">
-      		<p>日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。</p>
-<p>归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A <code>write</code> v时，B何时可以read到v的变化; A <code>write</code> v 与B <code>write</code> v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。</p>
-<p>一致性从最根本上讲，只包含两个原则：1、可见性原则；2、原子性原则；只要参与者满足上述两种原则同时满足上述两种原则，即可实现一致性保证。</p>
-<p>为何称之为原则？主要是因为，参与者都遵守这样的原则之后，才可以使整个系统达到预期的一致性。</p>
-<p>上述描述过于抽象，我们拆解一下：</p>
-<p>1、可见性原则：<br>  即上述描述的，A <code>write</code> v时，B何时才能观察到。 举个例子, 当参与者是同一个进程中的多个线程时，可见性的表达常用volitale表达，即可见性原则总结为了happen before关系。happen-before则表明A <code>write</code> v happens-before B <code>read</code> v。<br>  可见性保证了什么呢？看个例子<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Visibility</span> &#123;</span></span><br><span class="line">   <span class="keyword">static</span> <span class="keyword">volatile</span> a=<span class="number">0</span>;</span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">String</span>[] args)</span> </span>&#123;</span><br><span class="line">       </span><br><span class="line">        <span class="comment">//in thread 1</span></span><br><span class="line">        a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//in thread 2</span></span><br><span class="line">        System.out.printlin(a);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>2、原子性原则：<br>  如上所述，可见性是保证对于一个值v的一致性的最基本且直观的方式，当希望保证对于一组值v1, v2, v3…保证一致性时只满足可见性原则还不够，还需要满足原子性原则。即我们希望能够支持，A <code>write</code> v1, v2, v3…，全部完成后，B <code>read</code> v1,v2,v3…时才可以读到改变。</p>
+      		<h1 id="Background："><a href="#Background：" class="headerlink" title="Background："></a>Background：</h1><p>Test Case也是代码，但好像又跟真实逻辑中的代码有所不同，那么不同在哪里呢？有这些不同会导致评价测试用例的标准有什么独特之处呢？</p>
+<p>本文试图回答上述两个问题：</p>
+<ol>
+<li>Test Case作为代码与业务逻辑代码的异同</li>
+<li>Test Case评价的标准</li>
+</ol>
+<h1 id="Test-Case与业务代码的评价标准有所不同"><a href="#Test-Case与业务代码的评价标准有所不同" class="headerlink" title="Test Case与业务代码的评价标准有所不同"></a>Test Case与业务代码的评价标准有所不同</h1><h2 id="DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”"><a href="#DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”" class="headerlink" title="DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)"></a>DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)</h2><p>下面的测试用例遵循了DRY原则(“Don’t Repeat Yourself”)，DRY鼓励代码重用而不是复制，例如通过提出helper方法或者使用循环。但这是一个好的测试用例吗？<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.users = [User(<span class="string">'alice'</span>), User(<span class="string">'bob'</span>)]  # This field can be reused across tests.</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  self._RegisterAllUsers()</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:  # Use a for-loop <span class="keyword">to</span> verify that all<span class="built_in"> users </span>are registered.</span><br><span class="line">    self.assertTrue(self.forum.HasRegisteredUser(user))</span><br><span class="line"></span><br><span class="line">def _RegisterAllUsers(self):  # This method can be reused across tests.</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:</span><br><span class="line">    self.forum.Register(user)</span><br></pre></td></tr></table></figure><br>尽管测试的主体还是很简洁的，但读者需要在脑海里做一些运算才能理解这个测试用例的意图，例如，通过从setUp()到_RegisterAllUsers()跟踪self.users的使用流程才能真正理解用例的含义。<strong>因为测试用例没有测试用例来保证了，TA需要保证人能够直观的分析其正确性</strong>，即使是这么搞会带来很多的重复代码。这也意味着尽管DRY是生产代码的最佳实践，但DRY原则是不完全适用于测试用例的编写的。</p>
+<p><strong>在测试用例中我们可以使用DAMP(“Desciptive and Meaningful Phrases”)，DAMP强调可读性高于唯一性</strong>。尽管应用该原则会导致代码重复(例如，重复了简单代码)，但这使得测试用例更容易被认为是”明显没问题”。让我们就这上面的case，用DAMP原则改写一下：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  # Create the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of relying on<span class="built_in"> users </span>created <span class="keyword">in</span> setUp.</span><br><span class="line">  user1 = User(<span class="string">'alice'</span>)</span><br><span class="line">  user2 = User(<span class="string">'bob'</span>)</span><br><span class="line"></span><br><span class="line">  # Register the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of <span class="keyword">in</span> a helper method, <span class="keyword">and</span> don<span class="string">'t use a for-loop.</span></span><br><span class="line"><span class="string">  self.forum.Register(user1)</span></span><br><span class="line"><span class="string">  self.forum.Register(user2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  # Assert each user individually instead of using a for-loop.</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user1))</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user2))</span></span><br></pre></td></tr></table></figure>
+<p>注意，<strong>DRY原则在测试中还是有其意义的</strong>；例如，使用一个helper方法来创建value object可以从测试用例的主体逻辑中移除过多的细节，从而提升清晰度。理想情况下，测试用例可以做到既可读又没有重复，但有些时候需要在二者之间做个取舍。<strong>当写测试用例时，如果碰到了需要在DRY与DAMP之间做个选择，首选DAMP</strong>。</p>
+<h2 id="业务代码有测试用例保障，测试用例没有测试用例保障"><a href="#业务代码有测试用例保障，测试用例没有测试用例保障" class="headerlink" title="业务代码有测试用例保障，测试用例没有测试用例保障"></a>业务代码有测试用例保障，测试用例没有测试用例保障</h2><p>如上文中提到的，业务代码有测试用例而测试用例没有测试用例了。这样的差异会导致二者的最终分化。<br>即由于业务代码有测试用例，因此TA的组织形式可以相对复杂，应用各种设计模式，采用DRY原则保证避免散弹式修改，因为TA明白，其正确性是依赖于测试用例保证的，而不是依赖人眼保证的。人在业务代码的正确性保证方面做的是<strong>没明显问题</strong><br>测试用例则不然，由于没有测试用例的测试用例保障，因此其正确性完全依赖于人眼保证，即Review测试用例需要能够做到<strong>明显没问题</strong>。<br>因此，测试用例越容易被看懂，越容易判断正确性，越好。     </p>
+<h1 id="Test-Case评价的标准"><a href="#Test-Case评价的标准" class="headerlink" title="Test Case评价的标准"></a>Test Case评价的标准</h1><h2 id="测试用例稳定性"><a href="#测试用例稳定性" class="headerlink" title="测试用例稳定性"></a>测试用例稳定性</h2><p>TBD…</p>
+<h2 id="测试用例可读性及明显没问题"><a href="#测试用例可读性及明显没问题" class="headerlink" title="测试用例可读性及明显没问题"></a>测试用例可读性及明显没问题</h2><p>TBD…</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html" target="_blank" rel="noopener">https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html</a></p>
 
 <div id="gitalk-container"></div>
 <script src="https://cdn.bootcss.com/blueimp-md5/2.12.0/js/md5.min.js"></script><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
@@ -233,13 +239,9 @@
         </div>
         <nav class="m-pagination col-md-8 col-md-offset-2 col-sm-24" role="pagination">
     
-    <a class="pull-left" href="/2018/01/25/failure_mode_in_distributed_system/" style="float: left;">
-        ← 分布式系统中的失败模式
-    </a>
     
-    
-    <a class="pull-right" href="/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/">
-        Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查 →
+    <a class="pull-right" href="/2021/06/06/test-series.test-behavior-not-implementation/">
+        测试行为而不是实现 →
     </a>
     
 </nav>
