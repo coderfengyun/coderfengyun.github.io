@@ -17,7 +17,7 @@
 <!--<![endif]-->
 
 <head>
-  <title>Category: 架构工具 | Hexo</title>
+  <title>Hermetic Server | Hexo</title>
   <!-- Meta data -->
     <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -59,7 +59,7 @@
 </head>
 
 <!--
-<body class="home-template">
+<body class="post-template">
 -->
 <body id="index" class="lightnav animsition">
 
@@ -190,69 +190,135 @@
         <!-- ============================ Header & Logo bar =========================== -->
 
 
-      <!-- ============================ Hero Image =========================== -->
-
-<section id="hero" class="scrollme">
-    <div class="container-fluid element-img" style="background: url(/img/bg_img.jpg) no-repeat center center fixed;background-size: cover">
-        <div class="row">
-            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 vertical-align cover boost text-center">
-                <div class="center-me animateme" data-when="exit" data-from="0" data-to="0.6" data-opacity="0" data-translatey="100">
-                    <div>
-                        
-                        <h2>YOU'VE MADE A <span>BRAVE</span> DECISION, WELCOME.</h2>
-                        <p></p>
-                        
-                        <h2></h2>
-                        <p>每一个不曾起舞的日子都是对生命的辜负。</p>
-                        
-
-                    </div>
-                </div>
-            </div>
-            <!-- // .col-md-12 -->
-        </div>
-        <div class="herofade beige-dk"></div>
-    </div>
-</section>
-
-<!-- Height spacing helper -->
-<div class="heightblock"></div>
-<!-- // End height spacing helper -->
-
-<!-- ============================ END Hero Image =========================== -->
-
-
-
-
-<section id="services">
+      
+<section id="intro">
     <div class="container">
-        <div class="row">
-            <div class="col-md-10 col-md-offset-1">
-                <div class="row boxes">
-                    
-                    
-                        
-                        
-                        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 wow fadeInUp" data-wow-delay="0.3s">
-                            
-                              <h4 class="title"><a href="/2016/01/12/refactoring-denpendency-module/">重构包(模块)之间的依赖关系</a></h4>
-                            
-                            <p><time datetime="2016-01-11T16:00:00.000Z"><a href="/2016/01/12/refactoring-denpendency-module/">2016-01-12</a></time></p>
-                        </div>
-                    
-                </div>
-            </div>    
+        <div class="row col-md-offset-2">
+            <div class="col-md-8">
+    			<span class="post-meta">
+      <time datetime="2021-06-07T16:00:00.000Z" itemprop="datePublished">
+          2021-06-08
+      </time>
+    
+    
+    | 
+    <a href='/tags/自动化测试/'>自动化测试</a>,
+    
+    <a href='/tags/ToTT/'>ToTT</a>
+    
+    
+</span>
+                <h1>Hermetic Server</h1>
+            </div>
         </div>
-    </div>
-</section> 
+        <div class="col-md-8 col-md-offset-2">
+      		<p>考虑一个复杂的web应用。实际上，其由一个服务器迷宫，每一个负责不同的任务，并且有这相互复杂的交互。每一个用户行为会游走“服务器迷宫”后返回给终端用户。我们应该怎么对这样应用写end-to-end测试用例呢？</p>
+<h1 id="End-To-End-Test"><a href="#End-To-End-Test" class="headerlink" title="End-To-End Test"></a>End-To-End Test</h1><p>一个end-to-end测试在Google的测试宇宙中指代：验证了整个从请求到响应间的全部服务栈。下面是一个简化的SUT(System Under Test)的示例，用以说明一个end-to-end测试用例用来验证什么。注意SUT中的Frontend Server与一个第三方服务相连，但示例中的请求是不需要这部分信息的。</p>
+<p><img src="/images/test-series.hermetic-server/1-SUT-Hermetic-Server.jpeg" alt="SUT-1"></p>
+<p>对这么一个系统，要写一个又<strong>快</strong>又<strong>稳</strong>的end-to-end测试用例的一个挑战是避免网络访问。设计到网络访问的测试通常比只访问本地资源的测试要慢，并且访问远程服务也会因为不可决定性以及远程服务的不可用导致<strong>脆弱</strong>。</p>
+<h1 id="Hermetic-Server"><a href="#Hermetic-Server" class="headerlink" title="Hermetic Server"></a>Hermetic Server</h1><p>在Google设计end-to-end测试的一个技巧是<strong>Hermetic Servers</strong>。<br>什么是Hermetic Server呢？简单说就是”server in a box”。如果你可以将整个服务在一台无网络连接的机器上启动起来并保证其正常工作，那么你就拥有一个hermetic server了。广义的hermetic定义中只要是一套隔离的系统即可，本文是广义hermetic的一个特例。<br>为什么hermetic server是有用的呢？因为，如果你的整个SUT是由一系列的hermetic server组合而成的，那么该SUT就可以在一台机器上启动起来，直接测试；没有网络连接的必要！这个单机可以是一台物理机也可以是一台虚拟机。</p>
+<h1 id="设计Hermetic-Servers"><a href="#设计Hermetic-Servers" class="headerlink" title="设计Hermetic Servers"></a>设计Hermetic Servers</h1><p>构建hermetic server的过程，起始于一个新服务设计阶段的早期。有一下几点值得关注：</p>
+<ul>
+<li>所有指向其他服务的连接，都需要再运行时以一种DI的形式注入进去，比如命令行参数。</li>
+<li>所有静态文件都被打包进了该server的二进制包里。</li>
+<li>如果服务需要访问远程存储，保证该远程存储可以用数据文件或内存实现替换掉。</li>
+</ul>
+<p>满足上述需求，会使我们拥有一个高度可配置的服务，该服务也有潜力成为一个hermetic server。但广有这些特点还不够。我们需要如下完成如下几项，才能真的完成一个hermetic server：    </p>
+<ul>
+<li>保证那些我们的测试用例不会使用的连接点，都有相应的fake实现，以确保最终我们能验证“确实没有进行交互”。</li>
+<li>提供一些工具来帮助快速灌入测试数据。</li>
+<li>提供日志工具，在请求/响应经过SUT时，trace下这些 请求/相应。</li>
+</ul>
+<h1 id="在测试中使用Hermetic-Servers"><a href="#在测试中使用Hermetic-Servers" class="headerlink" title="在测试中使用Hermetic Servers"></a>在测试中使用Hermetic Servers</h1><p>让我们把上面展示过的SUT拿过来，并假设所有涉及的服务都是hermetic server。<br>下面是一个用户请求的end-to-end测试用例，画出来的样子：     </p>
+<p><img src="/images/test-series.hermetic-server/2-SUT-Hermetic-Server.jpeg" alt="SUT-2"></p>
+<p>该end-to-end测试做了如下几步：    </p>
+<ul>
+<li>在一个单机上启动图中所示的整个SUT    </li>
+<li>通过测试客户端想服务发送请求</li>
+<li>验证服务的响应<br>一个值得注意的点是图中指向mock server连接在这个测试中是是没有必要的。如果我们想要验证这个服务，那么我们也需要提供一个对应的hermetic server。<br>这个end-to-end测试更可靠，主因是TA没有使用网络连接。TA也更快，因为所有数据都在内存里或是本地磁盘里。我们可以在持续构建中跑这些而是用例，因此可以保证图中服务的任何一个发生变更时都可以执行该测试。如果测试失败了，日志模块会帮助找到问题发生在哪里。<br>我们在大量的end-to-end测试中使用了hermetic server。一些比较典型的例子如下：    </li>
+<li>启动测试，用以验证没有DI错误</li>
+<li>后端服务的API测试</li>
+<li>微缩benchmark性能测试</li>
+<li>前端的UI及API测试</li>
+</ul>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>Hermetic server也有他自己的弊端。他们会导致测试的执行时间变长，因为其需要在你执行end-to-end测试时把整个SUT都启动起来。如果你的测试限制了CPU和内存资源，那么可能由于服务间复杂交互的提升hermetic server可能会导致你最终超限。你可以在内存存储中使用的数据集大小也远小于在生产环境的存储中的大小。<br>Hermetic server是一种非常有意义的测试工具。像所有其他工具一样，TA也需要被斟酌着用在那些合适的地方。</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2012/10/hermetic-servers.html" target="_blank" rel="noopener">https://testing.googleblog.com/2012/10/hermetic-servers.html</a></p>
 
-<section id="statement">
-    <div class="container text-center wow fadeInUp" data-wow-delay="0.5s">
-        <div class="row">
-            <p>虽然还没想好写点什么，但是总觉得这里放句话比较和谐。</p>
+<div id="gitalk-container"></div>
+<script src="https://cdn.bootcss.com/blueimp-md5/2.12.0/js/md5.min.js"></script><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css"><script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+		<script>
+		var gitalkConfig = {"enable":true,"clientID":"c997773fd24266bce118","clientSecret":"cc7288358d3e52413255b40ebd391c4e55210ace","repo":"https://github.com/coderfengyun/coderfengyun.github.io","owner":"coderfengyun","admin":"coderfengyun","distractionFreeMode":false};
+	    gitalkConfig.id = md5(location.pathname);
+		var gitalk = new Gitalk(gitalkConfig);
+	    gitalk.render("gitalk-container");
+	    </script>
+            <div class="clearfix"></div>
+            <hr class="nogutter">
         </div>
+        <nav class="m-pagination col-md-8 col-md-offset-2 col-sm-24" role="pagination">
+    
+    
+    <a class="pull-right" href="/2021/06/07/test-series.how-to-define-good-test/">
+        怎样才能称之为好的测试用例 →
+    </a>
+    
+</nav>
+
+        <div class="col-md-8 col-md-offset-2 col-sm-24"><script type="text/javascript">
+  /**
+   * 搜狐畅言
+   */
+
+  /*
+  document.write('<div id="SOHUCS" sid="' + window.location.pathname.slice(1) + '" ></div>');
+
+  window.onload = function () {
+    (function () {
+      var appid = 'cytXXXX';
+      var conf = 'prod_xxxxxxxxxxxxxxxxx';
+      var width = window.innerWidth || document.documentElement.clientWidth;
+      var loadJs = function (d, a, id) {
+        var c = document.getElementsByTagName("head")[0] || document.head || document.documentElement;
+        var b = document.createElement("script");
+        b.setAttribute("type", "text/javascript");
+        b.setAttribute("charset", "UTF-8");
+        b.setAttribute("src", d);
+        if (id) {
+          b.setAttribute("id", id);
+        }
+        if (typeof a === "function") {
+          if (window.attachEvent) {
+            b.onreadystatechange = function () {
+              var e = b.readyState;
+              if (e === "loaded" || e === "complete") {
+                b.onreadystatechange = null;
+                a()
+              }
+            }
+          } else {
+            b.onload = a
+          }
+        }
+        c.appendChild(b)
+      };
+
+      loadJs("https://changyan.sohu.com/upload/changyan.js", function () {
+        window.changyan.api.config({
+          appid: appid,
+          conf: conf
+        })
+      });
+    })();
+  }
+  */
+
+</script>
+</div>
     </div>
 </section>
+
+
       
 <!-- ============================ Footer =========================== -->
 
