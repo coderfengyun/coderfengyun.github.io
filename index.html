@@ -178,7 +178,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2021-06-10 00:00:00 / Modified: 16:20:38" itemprop="dateCreated datePublished" datetime="2021-06-10T00:00:00+08:00">2021-06-10</time>
+              <time title="Created: 2021-06-10 00:00:00 / Modified: 16:25:19" itemprop="dateCreated datePublished" datetime="2021-06-10T00:00:00+08:00">2021-06-10</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -216,8 +216,7 @@
 <li>测试覆盖分析只能告诉你已存在的代码被覆盖的程度。TA不能告诉你<em>应该</em>存在的代码是否被执行过。考虑下面的代码：<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">error_code = FunctionCall();</span><br><span class="line"><span class="regexp">//</span> return kFatalError, kRecovableError, or kSuccess</span><br><span class="line"><span class="keyword">if</span> (error_code == kFatalError) &#123;</span><br><span class="line">  <span class="regexp">//</span> handle fatal error, <span class="keyword">exit</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="regexp">//</span> assume call succeeded</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 这段代码只处理了3个可能返回值中的两个（是个Bug）。缺少了当返回kRecoverableError时的错误回复逻辑。对于哪些只产生kFatalError和kSuccess的测试用例来说，覆盖率就已经达到了100%。对于kRecoverableError的测试用例没有增加测试覆盖率，如果只从覆盖率目标来看像是“多余”的，但是TA能暴露出来一个Bug！     </li>
 </ul>
-<p>因此<strong>做覆盖率分析的正确姿势</strong>是：</p>
-<ol>
+<h1 id="因此做覆盖率分析的正确姿势是："><a href="#因此做覆盖率分析的正确姿势是：" class="headerlink" title="因此做覆盖率分析的正确姿势是："></a>因此做覆盖率分析的正确姿势是：</h1><ol>
 <li>确定你的测试用例足够可读，先不管测试覆盖率。<br>这意味着写必要的测试用例，而不只是满足测试覆盖率要求的测试用例最小集</li>
 <li>检查测试的覆盖率结果。找到被测试遗漏的代码。也要注意预期之外的覆盖模式，通常意味着存在Bug。</li>
 <li>增加测试用例来覆盖2中发现的遗漏。</li>
