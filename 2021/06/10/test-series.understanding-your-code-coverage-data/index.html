@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="本文翻译自Martin Fowler博客，原文地址">
+  <meta name="description" content="代码覆盖率(也被成为测试覆盖率)统计了源代码的那些行被测试执行过了。关于测试覆盖数据的一个常见误解是：       我的源代码的代码覆盖率很高；因此，我的代码是被充分测试了的。上面的陈述试错误的！覆盖率高是个必要条件，但不是充分条件。充分测试的代码 &#x3D;&#x3D;&#x3D;&gt; 高覆盖率充分测试的代码 &lt;&#x3D;X&#x3D; 高覆盖率  最常用的覆盖率数据是行覆盖率(statement coverage)。这是收集成本">
 <meta property="og:type" content="article">
-<meta property="og:title" content="重构包(模块)之间的依赖关系">
-<meta property="og:url" content="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/index.html">
+<meta property="og:title" content="正确理解测试覆盖率数据">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/10/test-series.understanding-your-code-coverage-data/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="本文翻译自Martin Fowler博客，原文地址">
-<meta property="article:published_time" content="2016-01-11T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-06T05:42:53.230Z">
+<meta property="og:description" content="代码覆盖率(也被成为测试覆盖率)统计了源代码的那些行被测试执行过了。关于测试覆盖数据的一个常见误解是：       我的源代码的代码覆盖率很高；因此，我的代码是被充分测试了的。上面的陈述试错误的！覆盖率高是个必要条件，但不是充分条件。充分测试的代码 &#x3D;&#x3D;&#x3D;&gt; 高覆盖率充分测试的代码 &lt;&#x3D;X&#x3D; 高覆盖率  最常用的覆盖率数据是行覆盖率(statement coverage)。这是收集成本">
+<meta property="article:published_time" content="2021-06-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-10T08:20:38.683Z">
 <meta property="article:author" content="coderfengyun">
-<meta property="article:tag" content="软件工程">
-<meta property="article:tag" content="重构">
-<meta property="article:tag" content="架构工具">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta property="article:tag" content="Test_Coverage">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/">
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/10/test-series.understanding-your-code-coverage-data/">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>重构包(模块)之间的依赖关系 | Hexo</title>
+  <title>正确理解测试覆盖率数据 | Hexo</title>
   
 
 
@@ -161,7 +161,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/10/test-series.understanding-your-code-coverage-data/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,7 +174,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          重构包(模块)之间的依赖关系
+          正确理解测试覆盖率数据
         </h1>
 
         <div class="post-meta">
@@ -183,23 +183,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2016-01-12 00:00:00" itemprop="dateCreated datePublished" datetime="2016-01-12T00:00:00+08:00">2016-01-12</time>
+              <time title="Created: 2021-06-10 00:00:00 / Modified: 16:20:38" itemprop="dateCreated datePublished" datetime="2021-06-10T00:00:00+08:00">2021-06-10</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:42:53" itemprop="dateModified" datetime="2021-06-06T13:42:53+08:00">2021-06-06</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9E%B6%E6%9E%84%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">架构工具</span></a>
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
                 </span>
             </span>
 
@@ -214,7 +208,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>本文翻译自Martin Fowler博客，<a href="http://martinfowler.com/articles/refactoring-dependencies.html" target="_blank" rel="noopener">原文地址</a></p>
+        <p>代码覆盖率(也被成为测试覆盖率)统计了源代码的那些行被测试执行过了。关于测试覆盖数据的一个常见误解是：     </p>
+<blockquote>
+<p>我的源代码的代码覆盖率很高；因此，我的代码是被充分测试了的。<br>上面的陈述试<strong>错误的</strong>！覆盖率高是个必要条件，但不是充分条件。<br>充分测试的代码 ===&gt; 高覆盖率<br>充分测试的代码 &lt;=X= 高覆盖率</p>
+</blockquote>
+<p>最常用的覆盖率数据是行覆盖率(statement coverage)。这是收集成本最低的指标，也是最符合直觉的。行覆盖测量了一行代码是否被测试执行过。行覆盖没有测量程序执行路径被覆盖的比例。</p>
+<h1 id="行覆盖率的限制"><a href="#行覆盖率的限制" class="headerlink" title="行覆盖率的限制"></a>行覆盖率的限制</h1><ul>
+<li><p>TA不考虑所有可能的数据输入。考虑下面这段代码：</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">int a</span> = b / c;</span><br></pre></td></tr></table></figure>
+<p>这段代码可以被b = 18, a = 6覆盖，但没有被c = 0的场景测试过。</p>
+</li>
+<li><p>一些工具没有提供fractional coverage。例如，在下面的代码中，当条件a为真的时候，代码就已经被100%覆盖了。条件b却没被验证过。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (a <span class="params">||</span> b) &#123;</span><br><span class="line">  /<span class="regexp">/ do something</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure></li>
+<li>测试覆盖分析只能告诉你已存在的代码被覆盖的程度。TA不能告诉你<em>应该</em>存在的代码是否被执行过。考虑下面的代码：<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">error_code = FunctionCall();</span><br><span class="line"><span class="regexp">//</span> return kFatalError, kRecovableError, or kSuccess</span><br><span class="line"><span class="keyword">if</span> (error_code == kFatalError) &#123;</span><br><span class="line">  <span class="regexp">//</span> handle fatal error, <span class="keyword">exit</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="regexp">//</span> assume call succeeded</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+这段代码只处理了3个可能返回值中的两个（是个Bug）。缺少了当返回kRecoverableError时的错误回复逻辑。对于哪些只产生kFatalError和kSuccess的测试用例来说，覆盖率就已经达到了100%。对于kRecoverableError的测试用例没有增加测试覆盖率，如果只从覆盖率目标来看像是“多余”的，但是TA能暴露出来一个Bug！     </li>
+</ul>
+<p>因此<strong>做覆盖率分析的正确姿势</strong>是：</p>
+<ol>
+<li>确定你的测试用例足够可读，先不管测试覆盖率。<br>这意味着写必要的测试用例，而不只是满足测试覆盖率要求的测试用例最小集</li>
+<li>检查测试的覆盖率结果。找到被测试遗漏的代码。也要注意预期之外的覆盖模式，通常意味着存在Bug。</li>
+<li>增加测试用例来覆盖2中发现的遗漏。</li>
+<li>重复执行2-3 直到再增加测试用例就效用降低为止。如果有些边界场景难以测试，考虑把代码重构以提高可测试性。</li>
+</ol>
+<p>参考这篇文章： <a href="http://www.testing.com/writings/coverage.pdf" target="_blank" rel="noopener">如何错误使用测试覆盖率</a></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2008/03/tott-understanding-your-coverage-data.html" target="_blank" rel="noopener">https://testing.googleblog.com/2008/03/tott-understanding-your-coverage-data.html</a></p>
 
     </div>
 
@@ -224,9 +241,9 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/" rel="tag"># 软件工程</a>
-              <a href="/tags/%E9%87%8D%E6%9E%84/" rel="tag"># 重构</a>
-              <a href="/tags/%E6%9E%B6%E6%9E%84%E5%B7%A5%E5%85%B7/" rel="tag"># 架构工具</a>
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+              <a href="/tags/Test-Coverage/" rel="tag"># Test_Coverage</a>
           </div>
 
         
@@ -235,13 +252,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/" rel="prev" title="传说中的MySQL 5.6">
-      <i class="fa fa-chevron-left"></i> 传说中的MySQL 5.6
+    <a href="/2021/06/08/test-series.hermetic-server/" rel="prev" title="Hermetic Server">
+      <i class="fa fa-chevron-left"></i> Hermetic Server
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2016/03/19/Spring-Boot%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="next" title="SpringBoot哲学">
-      SpringBoot哲学 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -301,6 +315,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#行覆盖率的限制"><span class="nav-number">1.</span> <span class="nav-text">行覆盖率的限制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">2.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -421,7 +436,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'coderfengyun.github.io',
       owner       : 'coderfengyun',
       admin       : ['coderfengyun'],
-      id          : '07ac6e08ad38d4bc37ad4d1eb6706290',
+      id          : 'ae38beafbb4887a94af89080ba010eb8',
         language: 'zh-CN',
       distractionFreeMode: true
     });
