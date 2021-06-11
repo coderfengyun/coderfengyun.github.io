@@ -153,6 +153,93 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/11/test-series.fake-backends-with-rpc-replay/" class="post-title-link" itemprop="url">使用RpcReplay来做服务的Fake实现</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-06-11 00:00:00 / Modified: 20:37:17" itemprop="dateCreated datePublished" datetime="2021-06-11T00:00:00+08:00">2021-06-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="测试者的窘境"><a href="#测试者的窘境" class="headerlink" title="测试者的窘境"></a>测试者的窘境</h1><p><img src="/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png" alt="测试者的窘境"><br>我想让我的测试跑的飞快! 但是不行，我一来这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：     </p>
+<ul>
+<li>需要一直维护这些Test Double实现</li>
+<li>当Test Double的实现与真实实现不一致时，非常容易出Bug<blockquote>
+<p>如果我能有个又快又健壮的Test Double实现就好了。 —测试者</p>
+</blockquote>
+</li>
+</ul>
+<h1 id="RpcReplay："><a href="#RpcReplay：" class="headerlink" title="RpcReplay："></a>RpcReplay：</h1><p>将真实实现的入参及出参记录为日志。<br><img src="/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png" alt="录制真实服务的日志"></p>
+<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
+<h2 id="这会不会比较危险？"><a href="#这会不会比较危险？" class="headerlink" title="这会不会比较危险？"></a>这会不会比较危险？</h2><p>Q: 如果真实服务修改了TA的实现怎么办？在这种情况下我们会不是是在对着一个过时的log做测试？<br>A: 如果一个服务修改了接口，这个修改会导致线上故障。      </p>
+<h2 id="良性升级服务的响应"><a href="#良性升级服务的响应" class="headerlink" title="良性升级服务的响应"></a>良性升级服务的响应</h2><p>服务修改了实现，但不会修改接口，那么这个修改是良性的。<br>我们会跑一个后台job不断的更新日志。这个方式会使得你用的日志版Fake一直保持最新。    </p>
+<h2 id="请求的每次执行结果会不一样吗？"><a href="#请求的每次执行结果会不一样吗？" class="headerlink" title="请求的每次执行结果会不一样吗？"></a>请求的每次执行结果会不一样吗？</h2><p>十分不幸，是会不一样的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/request-diff-between-runs.png" alt="SUT每次发出的请求不一样"></p>
+<blockquote>
+<p>只要可能就移除非确定性的行为。确定性行为容易理解，重现，debug。</p>
+</blockquote>
+<p>有些信息确实会不一样，比如请求中带了时间戳，IP地址等。对于这些非确定性的字段，就需要在录制是过滤掉这些非确定性字段，而在重放时再单独设置。<br><img src="/images/test-series.fake-backends-with-rpc-replay/remove-nondeterministic-rpc-fields.png" alt="录制时去掉非确定性信息"><br><img src="/images/test-series.fake-backends-with-rpc-replay/add-nondeterministic-rpc-fields.png" alt="重放时增加非确定性信息"></p>
+<h2 id="额外的好处"><a href="#额外的好处" class="headerlink" title="额外的好处"></a>额外的好处</h2><p>一个服务挂了，不会影响你的测试。因为你的提交测试(pre-commit test)不依赖于真实的服务，而是依赖于日志版Fake的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png" alt="服务挂了不影响测试"></p>
+<p>如下两张图对比了没有/有RpcReplay时的测试稳定性数据：<br><img src="/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png" alt="没有/有RpcReplay时的用例稳定性对比"><br>而且执行速度比之前提高了50%！     </p>
+<h1 id="文章翻译自"><a href="#文章翻译自" class="headerlink" title="文章翻译自"></a>文章翻译自</h1><p>GTAC 2015，<a href="https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0" target="_blank" rel="noopener">https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/10/test-series.understanding-your-code-coverage-data/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -595,6 +682,93 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/on-the-criteria-to-be-used-indecomposing-systems-into-modules/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/06/on-the-criteria-to-be-used-indecomposing-systems-into-modules/" class="post-title-link" itemprop="url">系统划分为模块的范式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-06 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-10 20:02:19" itemprop="dateModified" datetime="2021-06-10T20:02:19+08:00">2021-06-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>本文翻译自：<a href="https://prl.ccs.neu.edu/img/p-tr-1971.pdf" target="_blank" rel="noopener">https://prl.ccs.neu.edu/img/p-tr-1971.pdf</a></p>
+</blockquote>
+<h1 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h1><p>本文主要讨论用以提升系统的灵活性及可理解性，同时缩短开发时间的模块化机制。模块化的有效性依赖于模块划分的范式。后文将以两个系统设计为例，对任何一个，都展示了一个常规划分方式和一个非常规划分方式。同时也阐明非常规的划分方式在指定的目标上具备显著优势。这些划分本身遵循的范式也在本文中得到了讨论。非常规的划分方式，如果采用常规的假设（一个模块🈶一个或多个子程序组成），在大多数情况下都可能不会发挥应有效力。文章也简单描述了另一种没有这样（负面）影响的实现方式。</p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>如果程序员会唱赞美诗，那么大部分流性的赞美诗将献给模块化编程。作者在一本讲述系统设计的书中找到这么一句关于模块化编程哲学的表述：</p>
+<blockquote>
+<p>在明确定义项目如何分段上的努力使得系统具备模块化特性。每个任务形成了一个独立的程序模块。在实现阶段，每个模块的input和output都被很好的定义了，对于系统其他模块来说都不存在着不明确。在验证的时候，模块是否完整的实现了TA的承诺则被分别测试；验证阶段也不需要协调多个任务的完成时间。最后，系统通过模块化的方式维护；系统错误和依赖可以被追踪到具体的模块，因此缩小了缺陷搜查的范围。</p>
+</blockquote>
+<p>首先，我非常赞同这段陈述，但不太赞同引申而来的一些可能的诠释。注意，关于如何将系统划分为多个模块，上述论述什么也没聊。因为将系统划分为大小适中的模块的决定并不能真的导向解耦，本文会讨论这个问题，并且将通过例子的方式，推荐一种应该被用来将系统划分为模块的范式。</p>
+<h1 id="回顾下该领域的现状"><a href="#回顾下该领域的现状" class="headerlink" title="回顾下该领域的现状"></a>回顾下该领域的现状</h1><p>在模块化编程领域的主要进展是(1)编码技巧的发展以及(2)编译器在“在编写一个模块时可以不关心其他模块”上的发展，其中(2)使得模块可以独立于整个系统来重新编制和替换。这项便利对于生产大规模代码是极有价值的，但这项技术的使用还没带来预期的收益。事实上，哪些经常被用来讲述大规模系统的例子本身就是高度模块化的程序，这些程序使用了上述复杂的编码和编译技术。      </p>
+<h1 id="模块化编程承诺的优势"><a href="#模块化编程承诺的优势" class="headerlink" title="模块化编程承诺的优势"></a>模块化编程承诺的优势</h1><p>模块化编程承诺的优势可以分为如下三类：(1)可管理 – 因为不同组织工作在不同的模块，且极少需要沟通(也不必事后后悔当时为什么没做更充分的沟通)，因此研发时间被大大缩短了；(2)生产的灵活性 – 希望能够做到一个模块发生剧烈变化是可以不影响其他模块；(3)可读性 – 希望整个系统可以被逐个模块的学习，因为更容易理解系统也就会得到更好的设计。</p>
+<h1 id="什么是“模块化”"><a href="#什么是“模块化”" class="headerlink" title="什么是“模块化”"></a>什么是“模块化”</h1><p>在这个的上下文中，模块最好被理解为一个独立的工作单元而不是一个子程序。模块化想要描述的是在各个模块的工作开始前必须要做的设计决策。尽管在不同的方案中的决策差异极大，但所有方案的(决策)意图都被描述为系统级的决策(例如，哪些会影响超过一个模块的决策)。    </p>
+<h1 id="示例系统1：关键字索引生成系统"><a href="#示例系统1：关键字索引生成系统" class="headerlink" title="示例系统1：关键字索引生成系统"></a>示例系统1：关键字索引生成系统</h1><p>对于不了解什么是关键字索引的人来说，下面这段（关于关键字索引）介绍对于理解本文就足够了。关键字索引系统接收一个顺序的文字行的集合，每一行是一个顺序的词的集合，每个词是一个顺序的字母的集合(对于英文)。每一行都可能是”循环移位的”，即，不断地将第一个单词移掉在拼接到行的末尾。这个关键字索引系统以字母序输出每一行的所有循环移位。这是个很小的系统。除非是极端情况(巨大的数据集，没有支持软件)，这样一个系统都可以在1-2周的时间搞定。因此这是个不合适的例子，因为没有任何必要在这样的系统上进行模块化编程。因为细致又完全地分解一个大系统是不实际的，因此我们还是试着把这个问题当做是个大项目吧。我们给出了两种模块化的方式。第一个，我们觉着，是现在比较典型的工程划分办法；另一个是在毕设中成功被应用的划分方法。</p>
+<h2 id="模块划分方法一"><a href="#模块划分方法一" class="headerlink" title="模块划分方法一"></a>模块划分方法一</h2><p>我们看下面的模块：<br>Module 1：输入：这个模块包含一个主程序，TA读取输入设备中的数据行，然后存储在core中，以待其他模块的处理。在core中，每四个字符被存储在一个字中，一个未被使用的字符被用来标识一个字的结束。维护了一个索引来展示每行的开始地址。<br>Module 2：循环移位：这个模块在输入模块结束之后被调用。本模块准备了一个索引，用以给出每个循环移位的开始字符，以及module 1生成的行数组的原始index，而不是将所有循环移位都存在core里，本模块把输出存入core中通过一个个的pair（每个pair由原始行号，开始地址组成）。<br>Module 3：字母序排序：本模块把module 1和module 2的输出作为输入。本模块产生了一个跟module 2（产生的结果）一样的数组。然后，将其按照字母序排序。<br>Module 4：输出：使用module 3和module 1输出的数组，本模块输出一个</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2018/01/25/failure_mode_in_distributed_system/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -857,162 +1031,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/03/19/Spring-Boot%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2016/03/19/Spring-Boot%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" class="post-title-link" itemprop="url">SpringBoot哲学</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2016-03-19 00:00:00" itemprop="dateCreated datePublished" datetime="2016-03-19T00:00:00+08:00">2016-03-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:39:32" itemprop="dateModified" datetime="2021-06-06T13:39:32+08:00">2021-06-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A1%86%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">技术框架</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Spring-Annotation的哲学是要有开关：</p>
-<ol>
-<li><p>例如当你使用@ConfigurationProperties时，必须要搭配EnableConfigurationProperties </p>
-</li>
-<li><p>例如当你使用AutoConfiguration配置在META-INF中时，必须搭配使用@EnableAutoConfiguration</p>
-</li>
-<li><p>例如当在测试用例中要使用某些bean上的AOP方法生效（通过ASPECTJ实现的），则可以对改bean打上@EnableAspectJAutoProxy</p>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2016/01/12/refactoring-denpendency-module/" class="post-title-link" itemprop="url">重构包(模块)之间的依赖关系</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2016-01-12 00:00:00" itemprop="dateCreated datePublished" datetime="2016-01-12T00:00:00+08:00">2016-01-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:42:53" itemprop="dateModified" datetime="2021-06-06T13:42:53+08:00">2021-06-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9E%B6%E6%9E%84%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">架构工具</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>本文翻译自Martin Fowler博客，<a href="http://martinfowler.com/articles/refactoring-dependencies.html" target="_blank" rel="noopener">原文地址</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1082,7 +1100,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1091,7 +1109,7 @@
         <span class="site-state-item-name">categories</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>
