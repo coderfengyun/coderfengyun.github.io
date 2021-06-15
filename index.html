@@ -153,6 +153,82 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/15/test-series.testing-state-vs-testing-interactions/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/15/test-series.testing-state-vs-testing-interactions/" class="post-title-link" itemprop="url">测试状态 V.S. 测试调用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-06-15 00:00:00 / Modified: 13:12:07" itemprop="dateCreated datePublished" datetime="2021-06-15T00:00:00+08:00">2021-06-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>单元测试主要有两种方式来验证待验证代码是否正常工作：通过测试状态和通过测试调用。二者有什么分别呢？</p>
+<h1 id="测试状态意味着只去验证待测代码返回的结果是否正确"><a href="#测试状态意味着只去验证待测代码返回的结果是否正确" class="headerlink" title="测试状态意味着只去验证待测代码返回的结果是否正确"></a>测试状态意味着只去验证待测代码返回的结果是否正确</h1><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="built_in">void</span> testSortNumbers() &#123;</span><br><span class="line">  NumberSorter numberSorter = new NumberSorter(quicksort, bubbleSort);</span><br><span class="line">  <span class="comment">// Verify that the returned list is sorted. It doesn't matter which sorting</span></span><br><span class="line">  <span class="comment">// algorithm is used, as long as the right result is returned.</span></span><br><span class="line">  assertEquals(</span><br><span class="line">      new ArrayList(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>),</span><br><span class="line">      numberSorter.sortNumbers(new ArrayList(<span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="测试调用意味着要验证待测代码确实正确地调用了某些方法"><a href="#测试调用意味着要验证待测代码确实正确地调用了某些方法" class="headerlink" title="测试调用意味着要验证待测代码确实正确地调用了某些方法"></a>测试调用意味着要验证待测代码确实正确地调用了某些方法</h1><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">SortNumbers_quicksortIsUsed()</span> &#123;</span><br><span class="line">  <span class="comment">// Pass in mocks to the class and call the method under test.</span></span><br><span class="line">  NumberSorter numberSorter = <span class="keyword">new</span> <span class="constructor">NumberSorter(<span class="params">mockQuicksort</span>, <span class="params">mockBubbleSort</span>)</span>;</span><br><span class="line">  numberSorter.sort<span class="constructor">Numbers(<span class="params">new</span> ArrayList(3, 1, 2)</span>);</span><br><span class="line">  <span class="comment">// Verify that numberSorter.sortNumbers() used quicksort. The test should</span></span><br><span class="line">  <span class="comment">// fail if mockQuicksort.sort() is never called or if it's called with the</span></span><br><span class="line">  <span class="comment">// wrong arguments (e.g. if mockBubbleSort is used to sort the numbers).</span></span><br><span class="line">  verify(mockQuicksort).sort(<span class="keyword">new</span> <span class="constructor">ArrayList(3, 1, 2)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第二种测试(测试调用)可能会使得测试覆盖率比较高，但TA并不能告诉你待测的排序算法是否正常工作，只能知道quicksort.sort确实被调用了。这也是为什么在大多数场景下，都想要测试状态而不是测调用。<br>总的来说，调用在正确性不止依赖于返回值时才需要测试。在上述的例子中，只有在“quicksort是否被调用真的很重要时(比如，如果用了其他排序算法会导致方法执行很慢)”，才应该去测试调用，否则测试调用就真的没有必要。     </p>
+<h1 id="一些其他可能会需要测试调用的场景"><a href="#一些其他可能会需要测试调用的场景" class="headerlink" title="一些其他可能会需要测试调用的场景"></a>一些其他可能会需要测试调用的场景</h1><ul>
+<li><strong>待测代码调用了一个方法，该方法在不同的调用顺序及调用次数下，表现完全不同</strong>，例如有副作用(例如，希望保证只会发送一封邮件)，延迟(例如，想要确保只会产生确定次数的磁盘访问)或者多线程问题(比如，如果以错误的顺序访问，会导致产生死锁)。测试调用保证如果这些方法没有被正确调用，测试用例就挂。</li>
+<li><strong>在测试UI，且UI的渲染细节从UI逻辑中抽象分离出去了</strong>(例如使用MVC或MVP)。在测试Controller/Presenter时，只会关心View的具体方法确实被调用了，而不是去关心真的渲染成了什么样，因此你可以测与View之间的调用。类似的，当测试View时，你可以测与Controller/Presenter之间的调用。</li>
+</ul>
+<h1 id="文章翻译自："><a href="#文章翻译自：" class="headerlink" title="文章翻译自："></a>文章翻译自：</h1><p><a href="https://testing.googleblog.com/2013/03/testing-on-toilet-testing-state-vs.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/03/testing-on-toilet-testing-state-vs.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -937,100 +1013,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/" class="post-title-link" itemprop="url">Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2016-10-23 00:00:00" itemprop="dateCreated datePublished" datetime="2016-10-23T00:00:00+08:00">2016-10-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:41:07" itemprop="dateModified" datetime="2021-06-06T13:41:07+08:00">2021-06-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A1%86%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">技术框架</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>场景描述：问题的发生来源一个工作中的问题，简要描述是在一个多module的maven project中，job module依赖server module完成工作，在intelliJ中执行良好，但是用maven package打包的时候，就会报找不到server module中对应的类。</p>
-<p>于是乎，楼主开始了问题的排查。</p>
-<p><strong>怀疑是maven的锅 </strong><br>首先，怀疑是本地maven问题，尝试了各种解决办法，如maven -U, 删除本地maven库中server module的相应版本等。</p>
-<p><strong>察觉到问题关节 </strong><br>一通忙碌之后，楼主注意到报错的细节，不是找不到jar包，也不是server module的某一个类找不到，而是无论引用server module中的哪个类，package的时候都会报找不到响应的类。于是开始怀疑是不是server module的jar包有什么与众不同。</p>
-<p><strong>对比问题jar与普通jar的不同之处 </strong><br>那么楼主便将server module的jar包unzip开，查看细节</p>
-<p><em>有问题jar的结构</em><br>其中问题jar的包名是com.admin.server<br>jar–<br>     --BOOT-INF<br>     --META-INF<br>     --org<br>        --springframework<br>           --*</p>
-<p><em>普通jar结构<br>普通jar的包名是com.admin.job<br>jar–<br>    --META-INF<br>    --com<br>       --admin<br>          --job<br>             \</em>.class</p>
-<p>从中楼主比较出了不同，问题jar的主目录下并没有自己包名(com.admin.server)的目录，而普通的可依赖jar则有，那么是谁会修改这个jar的目录结构呢？</p>
-<p><strong> spring-boot接锅</strong><br>我们仔细观察可以发现问题jar的主目录下多了一个BOOT-INF，于是把矛头指向了spring-boot，在观察一下server module的pom.xml，楼主感觉真実はいつも一つ (真相只有一个)</p>
-<p><code><br>   <build><br>        <finalName>${project.artifactId}</finalName><br>        <plugins><br>            <plugin><br>                <groupId>org.springframework.boot</groupId><br>                <artifactId>spring-boot-maven-plugin</artifactId><br>                <version>1.4.0-RELEASE</version><br>                <executions><br>                    <execution><br>                        <goals><br>                            <goal>repackage</goal><br>                        </goals><br>                    </execution><br>                </executions><br>            </plugin><br>       …<br></code></p>
-<p>从上述代码我们可以看出spring-boot做了个maven的plugin，在repackage时期的时候接手了打包过程。所以有理由怀疑这次问题是由于升级到了spring-boot 1.4.0-RELEASE引起的。</p>
-<p>经过简单的搜索，便找到了stack overflow上得解答以及spring-boot自己的文档说明，<a href="http://docs.spring.io/spring-boot/docs/current/maven-plugin/examples/repackage-classifier.html" target="_blank" rel="noopener">spring-boot文档</a></p>
-<p><strong> 然而intresting</strong><br>找到了问题后，稍一兴奋，便有一个问题萦绕在楼主心头，久久不能散去，classloader究竟是怎样在jar文件中查找类的呢？</p>
-<p>阅读了一会URLClassLoader的源码，感觉不得要领，于是开始了写测试用例调试URLClassLoader的过程。</p>
-<p>将上述问题jar作为全路径输入，查找其中的类名，debug走起</p>
-<p><code><br>   @Test<br>    public void test() throws MalformedURLException {<br>        String pathname = “/<FOLDER_PATH>/target/admin-server-exec.jar”;<br>        try {<br>            Class&lt;?&gt; aClass = new URLClassLoader(new URL[]{FileURL.makeURL(pathname)}, null)<br>                    .loadClass(“com.admin.server.web.controller.AdminController.class”);<br>        } catch (ClassNotFoundException e) {<br>            e.printStackTrace();<br>        }<br>    }<br></code></p>
-<p>不断跟踪深入，直到发现一处<br><code><br>esource getResource(String var1, boolean var2) {<br>            if(this.metaIndex != null &amp;&amp; !this.metaIndex.mayContain(var1)) {<br>                return null;<br>            } else {<br>                try {<br>                    this.ensureOpen();<br>                } catch (IOException var5) {<br>                    throw new InternalError(var5);<br>                }</p>
-<pre><code>JarEntry var3 = this.jar.getJarEntry(var1);
-</code></pre><p></code></p>
-<p>以及getJarEntry的实现：<br><code><br>public ZipEntry getEntry(String name) {<br>        if (name == null) {<br>            throw new NullPointerException(“name”);<br>        }<br>        long jzentry = 0;<br>        synchronized (this) {<br>            ensureOpen();<br>            jzentry = getEntry(jzfile, zc.getBytes(name), true);<br>            if (jzentry != 0) {<br>                ZipEntry ze = getZipEntry(name, jzentry);<br>                freeEntry(jzfile, jzentry);<br>                return ze;<br>            }<br>        }<br>        return null;<br>    }<br></code></p>
-<p>那么一切豁然开朗，从jar中查找一个类，最后的实现便是查找待寻找的名字是否在zip的相应位置，由此可见，被spring-boot重新打包之后的jar中找不到相应的类非常合理。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1100,7 +1082,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
