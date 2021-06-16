@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="本文翻译自Martin Fowler博客，原文地址">
+  <meta name="description" content="测试替身是用来在测试中取代真实对象的，很类似与电影里演员的特技替身。测试替身的所有分类通常会被称为”mocks”，但由于不同的测试替身有不同的使用场景，对TA们进行区分还是挺重要的。最重要的测试替身有stubs，mocks和fakes。stub没有逻辑，只返回你让TA返回的值。当你需要一个对象返回一个特定值，以使待测代码到达某一确定状态时，可以使用stubs。尽管手写stubs挺简单的，但使用mo">
 <meta property="og:type" content="article">
-<meta property="og:title" content="重构包(模块)之间的依赖关系">
-<meta property="og:url" content="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/index.html">
+<meta property="og:title" content="认识一下你的测试替身">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/16/know-your-test-doubles/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="本文翻译自Martin Fowler博客，原文地址">
-<meta property="article:published_time" content="2016-01-11T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-06T05:42:53.230Z">
+<meta property="og:description" content="测试替身是用来在测试中取代真实对象的，很类似与电影里演员的特技替身。测试替身的所有分类通常会被称为”mocks”，但由于不同的测试替身有不同的使用场景，对TA们进行区分还是挺重要的。最重要的测试替身有stubs，mocks和fakes。stub没有逻辑，只返回你让TA返回的值。当你需要一个对象返回一个特定值，以使待测代码到达某一确定状态时，可以使用stubs。尽管手写stubs挺简单的，但使用mo">
+<meta property="article:published_time" content="2021-06-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-16T09:57:20.264Z">
 <meta property="article:author" content="coderfengyun">
-<meta property="article:tag" content="软件工程">
-<meta property="article:tag" content="重构">
-<meta property="article:tag" content="架构工具">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta property="article:tag" content="unit_test">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/">
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/16/know-your-test-doubles/">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>重构包(模块)之间的依赖关系 | Hexo</title>
+  <title>认识一下你的测试替身 | Hexo</title>
   
 
 
@@ -161,7 +161,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/01/12/refactoring-denpendency-module/">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/16/know-your-test-doubles/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,7 +174,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          重构包(模块)之间的依赖关系
+          认识一下你的测试替身
         </h1>
 
         <div class="post-meta">
@@ -183,23 +183,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2016-01-12 00:00:00" itemprop="dateCreated datePublished" datetime="2016-01-12T00:00:00+08:00">2016-01-12</time>
+              <time title="Created: 2021-06-16 00:00:00 / Modified: 17:57:20" itemprop="dateCreated datePublished" datetime="2021-06-16T00:00:00+08:00">2021-06-16</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:42:53" itemprop="dateModified" datetime="2021-06-06T13:42:53+08:00">2021-06-06</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%9E%B6%E6%9E%84%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">架构工具</span></a>
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
                 </span>
             </span>
 
@@ -214,7 +208,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>本文翻译自Martin Fowler博客，<a href="http://martinfowler.com/articles/refactoring-dependencies.html" target="_blank" rel="noopener">原文地址</a></p>
+        <p>测试替身是用来在测试中取代真实对象的，很类似与电影里演员的特技替身。测试替身的所有分类通常会被称为”mocks”，但由于不同的测试替身有不同的使用场景，对TA们进行区分还是挺重要的。最重要的测试替身有stubs，mocks和fakes。<br>stub没有逻辑，只返回你让TA返回的值。当你需要一个对象返回一个特定值，以使待测代码到达某一确定状态时，可以使用stubs。尽管手写stubs挺简单的，但使用mock框架通常可以减少很多的样板代码。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Pass in a stub that was created by a mocking framework.</span></span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">stubAuthenticationService</span>)</span>;</span><br><span class="line"><span class="comment">// The user shouldn't have access when the authentication service returns false.</span></span><br><span class="line"><span class="keyword">when</span>(stubAuthenticationService.is<span class="constructor">Authenticated(USER_ID)</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">false</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">False(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br><span class="line"><span class="comment">// The user should have access when the authentication service returns true. </span></span><br><span class="line"><span class="keyword">when</span>(stubAuthenticationService.is<span class="constructor">Authenticated(USER_ID)</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">true</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">True(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br></pre></td></tr></table></figure></p>
+<p>Mock带有被调用方式的预期，如果没有通过那样方式被调用，则该测试应该失败。Mock是用来测试对象之间交互的，且在那些没有其他可见状态变化或返回值的场景下是非常合适的(比如，你的代码从磁盘读取数据，你希望保证只读一次磁盘，你可以用mock来验证该方法确实只赌了一次磁盘)。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Pass in a mock that was created by a mocking framework.</span></span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">mockAuthenticationService</span>)</span>;</span><br><span class="line">accessManager.user<span class="constructor">HasAccess(USER_ID)</span>;</span><br><span class="line"><span class="comment">// The test should fail if accessManager.userHasAccess(USER_ID) didn't call</span></span><br><span class="line"><span class="comment">// mockAuthenticationService.isAuthenticated(USER_ID) or if it called it more than once.</span></span><br><span class="line">verify(mockAuthenticationService).is<span class="constructor">Authenticated(USER_ID)</span>;</span><br></pre></td></tr></table></figure><br>fake不适用mock框架：它是API的一种轻量级实现，看起来就想真实实现一样，但不适合在生产环境运行（例如，一个内存数据库）。fake可以使用在那些无法使用真实实现来测试的场景(例如，如果真是实现太慢了，或者需要通过网络访问)。你不需要自己来实现fake，因为fake通常是被那些维护真实实现的人或团队维护的。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Creating the fake is fast and easy.</span></span><br><span class="line">AuthenticationService fakeAuthenticationService = <span class="keyword">new</span> <span class="constructor">FakeAuthenticationService()</span>;</span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">fakeAuthenticationService</span>)</span>;</span><br><span class="line"><span class="comment">// The user shouldn't have access since the authentication service doesn't</span></span><br><span class="line"><span class="comment">// know about the user.</span></span><br><span class="line"><span class="keyword">assert</span><span class="constructor">False(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br><span class="line"><span class="comment">// The user should have access after it's added to the authentication service.</span></span><br><span class="line">fakeAuthenticationService.add<span class="constructor">AuthenticatedUser(USER_ID)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">True(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br></pre></td></tr></table></figure></p>
+<p>术语”测试替身”是Gerard Meszaros在《xUnit Test Patterns》一书中创造的。你可以在该书中找到更多关于测试替身的信息，或者该书的<a href="http://xunitpatterns.com/Test%20Double%20Patterns.html" target="_blank" rel="noopener">网站</a>。你也可以在Martin Fowler的<a href="http://martinfowler.com/articles/mocksArentStubs.html" target="_blank" rel="noopener">文章</a>中找到对于不同测试替身的讨论。</p>
+<h1 id="文章翻译自："><a href="#文章翻译自：" class="headerlink" title="文章翻译自："></a>文章翻译自：</h1><p><a href="https://testing.googleblog.com/2013/07/testing-on-toilet-know-your-test-doubles.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/07/testing-on-toilet-know-your-test-doubles.html</a></p>
 
     </div>
 
@@ -224,9 +221,9 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/" rel="tag"># 软件工程</a>
-              <a href="/tags/%E9%87%8D%E6%9E%84/" rel="tag"># 重构</a>
-              <a href="/tags/%E6%9E%B6%E6%9E%84%E5%B7%A5%E5%85%B7/" rel="tag"># 架构工具</a>
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+              <a href="/tags/unit-test/" rel="tag"># unit_test</a>
           </div>
 
         
@@ -235,13 +232,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/" rel="prev" title="传说中的MySQL 5.6">
-      <i class="fa fa-chevron-left"></i> 传说中的MySQL 5.6
+    <a href="/2021/06/15/test-series.testing-state-vs-testing-interactions/" rel="prev" title="测试状态 V.S. 测试调用">
+      <i class="fa fa-chevron-left"></i> 测试状态 V.S. 测试调用
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2016/03/19/Spring-Boot%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="next" title="SpringBoot哲学">
-      SpringBoot哲学 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -301,6 +295,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#文章翻译自："><span class="nav-number">1.</span> <span class="nav-text">文章翻译自：</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -421,7 +416,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'coderfengyun.github.io',
       owner       : 'coderfengyun',
       admin       : ['coderfengyun'],
-      id          : '07ac6e08ad38d4bc37ad4d1eb6706290',
+      id          : '0c6beee7d8137bcd293b663327473697',
         language: 'zh-CN',
       distractionFreeMode: true
     });

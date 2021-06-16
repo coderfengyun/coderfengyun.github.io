@@ -153,6 +153,77 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/16/know-your-test-doubles/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/16/know-your-test-doubles/" class="post-title-link" itemprop="url">认识一下你的测试替身</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-06-16 00:00:00 / Modified: 17:57:20" itemprop="dateCreated datePublished" datetime="2021-06-16T00:00:00+08:00">2021-06-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>测试替身是用来在测试中取代真实对象的，很类似与电影里演员的特技替身。测试替身的所有分类通常会被称为”mocks”，但由于不同的测试替身有不同的使用场景，对TA们进行区分还是挺重要的。最重要的测试替身有stubs，mocks和fakes。<br>stub没有逻辑，只返回你让TA返回的值。当你需要一个对象返回一个特定值，以使待测代码到达某一确定状态时，可以使用stubs。尽管手写stubs挺简单的，但使用mock框架通常可以减少很多的样板代码。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Pass in a stub that was created by a mocking framework.</span></span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">stubAuthenticationService</span>)</span>;</span><br><span class="line"><span class="comment">// The user shouldn't have access when the authentication service returns false.</span></span><br><span class="line"><span class="keyword">when</span>(stubAuthenticationService.is<span class="constructor">Authenticated(USER_ID)</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">false</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">False(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br><span class="line"><span class="comment">// The user should have access when the authentication service returns true. </span></span><br><span class="line"><span class="keyword">when</span>(stubAuthenticationService.is<span class="constructor">Authenticated(USER_ID)</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">true</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">True(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br></pre></td></tr></table></figure></p>
+<p>Mock带有被调用方式的预期，如果没有通过那样方式被调用，则该测试应该失败。Mock是用来测试对象之间交互的，且在那些没有其他可见状态变化或返回值的场景下是非常合适的(比如，你的代码从磁盘读取数据，你希望保证只读一次磁盘，你可以用mock来验证该方法确实只赌了一次磁盘)。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Pass in a mock that was created by a mocking framework.</span></span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">mockAuthenticationService</span>)</span>;</span><br><span class="line">accessManager.user<span class="constructor">HasAccess(USER_ID)</span>;</span><br><span class="line"><span class="comment">// The test should fail if accessManager.userHasAccess(USER_ID) didn't call</span></span><br><span class="line"><span class="comment">// mockAuthenticationService.isAuthenticated(USER_ID) or if it called it more than once.</span></span><br><span class="line">verify(mockAuthenticationService).is<span class="constructor">Authenticated(USER_ID)</span>;</span><br></pre></td></tr></table></figure><br>fake不适用mock框架：它是API的一种轻量级实现，看起来就想真实实现一样，但不适合在生产环境运行（例如，一个内存数据库）。fake可以使用在那些无法使用真实实现来测试的场景(例如，如果真是实现太慢了，或者需要通过网络访问)。你不需要自己来实现fake，因为fake通常是被那些维护真实实现的人或团队维护的。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Creating the fake is fast and easy.</span></span><br><span class="line">AuthenticationService fakeAuthenticationService = <span class="keyword">new</span> <span class="constructor">FakeAuthenticationService()</span>;</span><br><span class="line">AccessManager accessManager = <span class="keyword">new</span> <span class="constructor">AccessManager(<span class="params">fakeAuthenticationService</span>)</span>;</span><br><span class="line"><span class="comment">// The user shouldn't have access since the authentication service doesn't</span></span><br><span class="line"><span class="comment">// know about the user.</span></span><br><span class="line"><span class="keyword">assert</span><span class="constructor">False(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br><span class="line"><span class="comment">// The user should have access after it's added to the authentication service.</span></span><br><span class="line">fakeAuthenticationService.add<span class="constructor">AuthenticatedUser(USER_ID)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">True(<span class="params">accessManager</span>.<span class="params">userHasAccess</span>(USER_ID)</span>);</span><br></pre></td></tr></table></figure></p>
+<p>术语”测试替身”是Gerard Meszaros在《xUnit Test Patterns》一书中创造的。你可以在该书中找到更多关于测试替身的信息，或者该书的<a href="http://xunitpatterns.com/Test%20Double%20Patterns.html" target="_blank" rel="noopener">网站</a>。你也可以在Martin Fowler的<a href="http://martinfowler.com/articles/mocksArentStubs.html" target="_blank" rel="noopener">文章</a>中找到对于不同测试替身的讨论。</p>
+<h1 id="文章翻译自："><a href="#文章翻译自：" class="headerlink" title="文章翻译自："></a>文章翻译自：</h1><p><a href="https://testing.googleblog.com/2013/07/testing-on-toilet-know-your-test-doubles.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/07/testing-on-toilet-know-your-test-doubles.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/15/test-series.testing-state-vs-testing-interactions/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -954,85 +1025,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/" class="post-title-link" itemprop="url">一致性系列概述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2017-12-28 00:00:00" itemprop="dateCreated datePublished" datetime="2017-12-28T00:00:00+08:00">2017-12-28</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:32:11" itemprop="dateModified" datetime="2021-06-06T13:32:11+08:00">2021-06-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。</p>
-<p>归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A <code>write</code> v时，B何时可以read到v的变化; A <code>write</code> v 与B <code>write</code> v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。</p>
-<p>一致性从最根本上讲，只包含两个原则：1、可见性原则；2、原子性原则；只要参与者满足上述两种原则同时满足上述两种原则，即可实现一致性保证。</p>
-<p>为何称之为原则？主要是因为，参与者都遵守这样的原则之后，才可以使整个系统达到预期的一致性。</p>
-<p>上述描述过于抽象，我们拆解一下：</p>
-<p>1、可见性原则：<br>  即上述描述的，A <code>write</code> v时，B何时才能观察到。 举个例子, 当参与者是同一个进程中的多个线程时，可见性的表达常用volitale表达，即可见性原则总结为了happen before关系。happen-before则表明A <code>write</code> v happens-before B <code>read</code> v。<br>  可见性保证了什么呢？看个例子<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Visibility</span> &#123;</span></span><br><span class="line">   <span class="keyword">static</span> <span class="keyword">volatile</span> a=<span class="number">0</span>;</span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">String</span>[] args)</span> </span>&#123;</span><br><span class="line">       </span><br><span class="line">        <span class="comment">//in thread 1</span></span><br><span class="line">        a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//in thread 2</span></span><br><span class="line">        System.out.printlin(a);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>2、原子性原则：<br>  如上所述，可见性是保证对于一个值v的一致性的最基本且直观的方式，当希望保证对于一组值v1, v2, v3…保证一致性时只满足可见性原则还不够，还需要满足原子性原则。即我们希望能够支持，A <code>write</code> v1, v2, v3…，全部完成后，B <code>read</code> v1,v2,v3…时才可以读到改变。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1102,7 +1094,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">18</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
