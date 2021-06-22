@@ -153,6 +153,99 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2018/01/25/failure_mode_in_distributed_system/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/01/25/failure_mode_in_distributed_system/" class="post-title-link" itemprop="url">分布式系统中的失败模式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-01-25 00:00:00" itemprop="dateCreated datePublished" datetime="2018-01-25T00:00:00+08:00">2018-01-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-06 13:30:51" itemprop="dateModified" datetime="2021-06-06T13:30:51+08:00">2021-06-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>由于最近在项目中碰到了由于cpu stuck引起的系统消息系统故障，想要系统性的理解分布式系统中存在的故障模式。<br>在”Fault-Tolerant Real-Time Systems: The Problem of Replica Determinism”书中，介绍了四种分布式系统中的failure模式。</p>
+<p>#<strong><em> 一、分布式系统中存在失败模式 </em></strong></p>
+<ol>
+<li><p>Byzantine or arbitrary failure (拜占庭故障)<br> 在这种失败模式中，一个节点S可以给一部分节点发送$=true消息的同时，给另一部分节点发送$=false的消息。与此同时，节点S还可能假冒其他节点的消息，例如，对于节点Si来说$=true，但是S会以Si的身份通知其他人$=false。</p>
+</li>
+<li><p>Authentification detectable byzantine failures (认证模式下的拜占庭故障)<br> 在这种失败模式中，一个节点S，只能执行自己的拜占庭故障，而无法假冒其他节点。</p>
+</li>
+<li><p>Performance failures or Timing Failure (性能故障或称为时间故障)<br> 这种故障模式比较容易理解，节点S，返回的是正确的消息，不过消息到达时间，或者太早或者太晚。</p>
+</li>
+<li><p>Ommission failures (忽略请求或不响应故障)<br> 在这种故障模式下，节点S，回复消息的时间是无限长。</p>
+</li>
+<li><p>Crash failures (崩溃故障)<br> 在这种故障模式下，节点S，处于Ommission failures中，并且停止响应。（注：这里只是故障模式更强了，从响应时间无限长，到了停止响应。虽然效果上相同。）</p>
+</li>
+<li><p>Fail-stop failures (失败停止故障)<br> 在这种故障模式下，节点S会表现出Crash failures的行为，与此同时，我们可以假设集群中任何的正常节点都可以监测到S已经失败了。</p>
+</li>
+</ol>
+<p>注：对于本人遇到的cpu stuck问题，看起来属于Ommission failures或Crash failures。</p>
+<p>#<strong><em> 二、故障模式之间的关联 </em></strong></p>
+<p>这些故障模式，将拜占庭故障定义为最严重故障，失败停止则是最轻微故障。在这些故障模式中，我们可以对故障节点假设些什么呢？对于拜占庭故障，我们什么都无法假设；对于失败停止故障，我们可以假设全部节点都可以发现该节点failed-stop了。明白了这一点之后，我们就完全可以接受，严重程度高的故障可以包含或者覆盖严重程度低的故障。形式化的定义如下：Byzantine failures ⊃ authentification detactable byzantine failures ⊃ performance failures ⊃ ommission failures ⊃ crash failures ⊃ fail-stop failures。形式化定义可能不太好理解，举个例子，Byzantine failures完全可以接到消息，不会消息来模拟ommission failures，依次类推，更为严重的故障可以模拟出轻微故障。</p>
+<p>上述的几种故障可以分为，Value Failure(正确性故障)和Timing Failure(时间性故障)。 </p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1001,7 +1094,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

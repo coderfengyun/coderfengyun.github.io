@@ -153,6 +153,245 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/17/test-series.just-say-no-to-more-e2e-tests/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/17/test-series.just-say-no-to-more-e2e-tests/" class="post-title-link" itemprop="url">对更多的end-to-end测试Say No</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-17 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-17T00:00:00+08:00">2021-06-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-22 15:06:16" itemprop="dateModified" datetime="2021-06-22T15:06:16+08:00">2021-06-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在生命中的某个节点，你可能会回想起一部你和朋友都曾想看又都后悔看过的电影。或者可能你记得那些“你的团队认为找到了杀手级功能，但只是在上线之后又归于沉寂”的时刻。     </p>
+<p>好的想法在实践中可能会失败，在测试的世界中，一个普遍的好但是经常在实践中失败的主意是基于end-to-end测试周围的测试策略。     </p>
+<p>测试人员投入时间写了大量的自动化测试，包括单元测试，集成测试，和end-to-end测试，但是该策略可能大部分都投入到了用end-to-end测试来整体验证一个产品。典型情况是，这些测试模拟了真实用户场景。     </p>
+<h1 id="理论上的End-to-End测试"><a href="#理论上的End-to-End测试" class="headerlink" title="理论上的End-to-End测试"></a>理论上的End-to-End测试</h1><p>虽然主要依赖于end-to-end测试是个坏点子，但却很容易说服一个理性人使其相信这个点子理论上是有意义的。     </p>
+<p>Google的<a href="https://www.google.com/about/company/philosophy/" target="_blank" rel="noopener">十件我们已知正确的事</a>的第一条是：”专注与用户，其他的一起以此为准”。因此，end-to-end测试专注于真实用户场景听起来是个好主意。而且，这个策略也有广泛的拥泵：      </p>
+<ul>
+<li>开发人员，喜欢它，因为这把测试工作的大部分转交给其他人负责了</li>
+<li>经理人与决策者，喜欢它，因为模拟真实用户场景的测试可以帮助他们简单的判断失败的测试对于用户来说意味着什么。</li>
+<li>测试人员，喜欢它，因为他们经常担心遗漏一个Bug或者时写了一个没有验证真实行为的测试用例；从用户视角写测试用例可以避免前面的问题，并且可以给测试人员一种满足感。</li>
+</ul>
+<h1 id="真实的End-to-End测试"><a href="#真实的End-to-End测试" class="headerlink" title="真实的End-to-End测试"></a>真实的End-to-End测试</h1><p>如果这个测试策略理论上听起来这么棒，那么在实践中怎么搞锉了的呢？为了讲清楚，我在下面展示了一个组合概述，该概述基于我或是其他测试人员的真实体验。在这个概述中，一个组织正在构建一个在线文档编辑的服务(比如，Google Docs)。<br>让我们假设这个团队已经有一些很酷的测试基础设施可用了。每个晚上：</p>
+<ol>
+<li>服务的最新版本都会被构建</li>
+<li>这个版本会被部署到团队的测试环境</li>
+<li>所有的end-to-end测试会在这个环境上执行</li>
+<li>一封总结了测试结果的邮件报告会被发给整个团队</li>
+</ol>
+<p>随着下一个发布日期的逐步接近，为了保证较高的产品质量标准，他们仍然要求在需求完成前要保证90%的end-to-end测试用例通过。现在，还有一天就到截止日期了：     </p>
+<table>
+<thead>
+<tr>
+<th>Days Left</th>
+<th>Pass%</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5%</td>
+<td>所有end-to-end测试用例都挂了！登录服务挂了。所有测试用例都需要登录，因此所有测试都挂了。</td>
+</tr>
+<tr>
+<td>0</td>
+<td>4%</td>
+<td>我们所依赖的兄弟团队，部署到测试环境一个低质量build</td>
+</tr>
+<tr>
+<td>-1</td>
+<td>54%</td>
+<td>一名研发昨天搞挂了测试场景保存。半数左右的测试用例会在执行中保存文档。研发同学花了很长时间用于排查是否是前端bug。</td>
+</tr>
+<tr>
+<td>-2</td>
+<td>54%</td>
+<td>确定了是个前端Bug，研发同学花了大半天的时间来排查问题的根因</td>
+</tr>
+<tr>
+<td>-3</td>
+<td>54%</td>
+<td>昨天一个错误的修复提交合进了仓库。错误挺容易就被定为了，因此，今天一个正确的修复提交被合进了仓库</td>
+</tr>
+<tr>
+<td>-4</td>
+<td>1%</td>
+<td>测试环境机房里发生了物理机故障</td>
+</tr>
+<tr>
+<td>-5</td>
+<td>84%</td>
+<td>大部分小Bug都是被几个主要Bug引起的(比如登录挂了，保存场景挂了)。还有些小问题仍在处理中</td>
+</tr>
+<tr>
+<td>-6</td>
+<td>87%</td>
+<td>应该能做到90%以上的，但是各种原因还是没做到</td>
+</tr>
+<tr>
+<td>-7</td>
+<td>89.54%</td>
+<td>很接近90%了。昨天没有新的修复合进代码库，所以昨天一定有些测试是因为自身脆弱导致没通过的</td>
+</tr>
+</tbody>
+</table>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>除了几个问题，测试还是不活了真正的bug的。</p>
+<h1 id="哪些是搞得比较好的"><a href="#哪些是搞得比较好的" class="headerlink" title="哪些是搞得比较好的"></a>哪些是搞得比较好的</h1><ul>
+<li>影响用户的Bug在被用户发现之前定位并解决了。</li>
+</ul>
+<h1 id="哪些是搞得还不够好的"><a href="#哪些是搞得还不够好的" class="headerlink" title="哪些是搞得还不够好的"></a>哪些是搞得还不够好的</h1><ul>
+<li>团队完成交付，整整延迟了一个礼拜(而且还加了很多班)</li>
+<li>查end-to-end测试用例失败的根因很痛苦也很消耗时间</li>
+<li>其他团队的失效以及机房失效有好几天都影响了测试结果</li>
+<li>许多小Bug藏在了更大的Bug后面（大坑套小坑）</li>
+<li>end-to-end测试有些时候还是比较脆弱的</li>
+<li>开发人员必须等到第二天才能搞明白一个修复是否真的有效</li>
+</ul>
+<p>所以，我们现在知道end-to-end这种测试策略的问题了，我们需要调整我们测试的方式来规避这些问题。但是怎么样才是正确的搞法呢？</p>
+<h1 id="测试真正的价值"><a href="#测试真正的价值" class="headerlink" title="测试真正的价值"></a>测试真正的价值</h1><p>通常来说，一旦发现未通过的测试用例，一个测试人员的工作就完成了。报告了一个bug，然后修复这个Bug就是开发的任务了。为了确认end-to-end测试策略到底哪里不靠谱，我们需要调出这个问题边界，从第一原则的角度来重新思考问题。如果我们“专注与用户(其他一起则随之而来)”，我们必须要问我们自己：一个失败的测试对用户的好处是什么。下面是对这个问题的回答。</p>
+<h1 id="一个失败的测试用例对于用户没有直接好处"><a href="#一个失败的测试用例对于用户没有直接好处" class="headerlink" title="一个失败的测试用例对于用户没有直接好处"></a>一个失败的测试用例对于用户没有直接好处</h1><p>尽管这句声明初看起来有些令人震惊，但这是真的。如果产品正常工作，一个测试用例能判断TA(指该产品)是否正常工作吗？如果产品出问题了，一个测试用例能判断TA(指该产品)是否出问题了吗？因此，如果一个失败的测试用例对于用户来说没什么意义，那么什么对用户来说有意义呢？</p>
+<h1 id="对于Bug的修复，是对用户有益的"><a href="#对于Bug的修复，是对用户有益的" class="headerlink" title="对于Bug的修复，是对用户有益的"></a>对于Bug的修复，是对用户有益的</h1><p>用户只对于Bug被修复感到开心。很明显，为了修复一个Bug，你必须要知道这Bug存在与哪里。为了知道Bug藏在哪，理想中你有一个测试用例来捕获这个Bug(因为如果测试用例不能捕获Bug，那么用户就会发现这些Bug)。但是在整个流程中，从测试用例失败到Bug修复，只有在最后一步(指Bug修复)才真的产生价值。</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Failing Test</th>
+<th>Bug Opened</th>
+<th>Bug Fixed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Value Added</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>因此，为了评估一个测试策略，不能只是评估它在发现Bug方面表现如何。也必须要评价在帮助研发修复(甚至是防范)Bug方面表现的怎么样。</p>
+<h1 id="简历正确的反馈回路"><a href="#简历正确的反馈回路" class="headerlink" title="简历正确的反馈回路"></a>简历正确的反馈回路</h1><p>测试创建了一个反馈回路，可以通知开发产品是否正常工作。理想的反馈回路有多个属性：</p>
+<ul>
+<li>Fast。没有开发人员想要浪费数小时甚至数天来判断是否变更正常工作。有些时候变更不工作，没有人是完美的，并且反馈循环需要多次执行(改-测-改-测)。一个快速的反馈循环，是的修复Bug更快。如果循环足够快，开发人员就可以在讲变更检入之前就执行测试。</li>
+<li>Reliable。没有开发人员想要花费数小时的时间来调试一个测试用例，结果只是发现这测试用例就是比较脆弱。脆弱的测试用例减弱了开发人员对于测试的新人，并且脆弱测试用例也经常会被忽略，即使是TA们真的发现了产品问题。</li>
+<li>Isolates failures。为了修复Bug，开发需要找到引起Bug的具体代码位置。当一个产品包含数百万行代码时，且Bug可能在任何地方，好似大海捞针。</li>
+</ul>
+<h1 id="小处着眼，而不是大处着眼"><a href="#小处着眼，而不是大处着眼" class="headerlink" title="小处着眼，而不是大处着眼"></a>小处着眼，而不是大处着眼</h1><p>那么，我们怎么才能创建理想的反馈回路呢？通过向更小处着眼，而不是更大。</p>
+<h1 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h1><p>单元测试只测产品的一小部分，并且将该部分隔离之后测试。单元测试比较接近于理想的反馈回路：</p>
+<ul>
+<li>单元测试 Fast。我们只需要构建一个小单元来测试，且测试用例也趋向于非常小。事实上，1/10秒的执行时间，对于单元测试来说是比较慢的。</li>
+<li>单元测试 Reliable。简单的系统和小单元总体上更不容易产生脆弱性。进而，单元测试的最佳实践，特别是与hermetic测试相关的实践，可以彻底移除脆弱性。</li>
+<li>单元测试Isolates Failures。即使产品包含100W行代码，如果一个单元测试没通过，你也只需在单元测试覆盖的小单元中搜寻Bug。</li>
+</ul>
+<p>书写高效的单元测试需要在如下领域磨炼出技巧：比如，依赖管理，mocking以及hermetic测试。在这我不会覆盖这些这些技巧，但是作为一个样例，可以参考提供给新Google员工阅读的<a href="https://github.com/google/guava/blob/master/guava/src/com/google/common/base/Stopwatch.java" target="_blank" rel="noopener">How Google builds</a>以及<a href="https://github.com/google/guava/blob/master/guava-tests/test/com/google/common/base/StopwatchTest.java" target="_blank" rel="noopener">测试一个计时器</a>。     </p>
+<h1 id="单元测试与end-to-end测试的对比"><a href="#单元测试与end-to-end测试的对比" class="headerlink" title="单元测试与end-to-end测试的对比"></a>单元测试与end-to-end测试的对比</h1><p>对于单元测试，你必须要等：首先等整个产品构建出来，然后等TA部署完毕，最后才能执行end-to-end测试。当测试用例执行时，脆弱性如影随形。即使一个测试用例发现了Bug，Bug也可能在产品的任何地方。<br>尽管end-to-end测试在模拟真实用户场景方面表现良好，但这个有点将很快被end-to-end反馈回路上的劣势冲淡。     </p>
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>Unit</th>
+<th>End-to-End</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fast</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Reliable</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Isolates Failures</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>模拟真实用户</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h1 id="集成测试"><a href="#集成测试" class="headerlink" title="集成测试"></a>集成测试</h1><p>单元测试确实有个巨大的缺点：即使每个单元都工作完好，你也不能确定他们在一起工作时是什么状态。但即使这样，你也不需要end-to-end测试。对于这种情况，可以使用一个集成测试。一个集成测试将几个单元组合起来，通常是两个单元，测试他们一起工作时的表现，以验证他们在一起工作时没问题。<br>如果两个单元之间的集成除了问题，且你能够写一个更小规模/更专注的集成测试来发现该问题，为什么要写一个end-to-end测试呢？如果你确实需要考虑的更广泛一点，那么你只需要“扩大一点点”来验证这些单元一起工作良好。     </p>
+<h1 id="测试金字塔"><a href="#测试金字塔" class="headerlink" title="测试金字塔"></a>测试金字塔</h1><p>尽管有了单元测试和集成测试之后，你还是希望有少量的end-to-end测试来验证整个系统。为了在三种测试类型中找到平衡，一图胜千言，测试金字塔表现的很到位。下面是个简化版的<a href="https://docs.google.com/presentation/d/15gNk21rjer3xo-b1ZqyQVGebOp_aPvHU3YH7YnOMxtE/edit#slide=id.g437663ce1_53_98" target="_blank" rel="noopener">测试金字塔</a>，来自于<a href="https://developers.google.com/google-test-automation-conference/2014/" target="_blank" rel="noopener">公开的Keynote</a>:      </p>
+<p><img src="/images/just-say-no-to-more-e2e-tests/test-pyramid.png" alt="测试金字塔"></p>
+<p>测试中最大量的内容应是金字塔底层的单元测试。当向金字塔上层移动时，测试范围变的越来越大，同时数量也应越来越少。     </p>
+<p>作为一个参考，Google通常建议70/20/10的比例分割：70%的单元测试，20%的集成测试，10%的end-to-end测试。确切的比例，每个team都会有所不同，但总体来看，应该保持金字塔的形状。要努力避免如下的反模式：    </p>
+<ul>
+<li>融化的冰激凌/倒金字塔。主要依赖于end-to-end测试，使用很少的集成测试，甚至更少的单元测试。</li>
+<li>沙漏。大量的单元测试，然后用end-to-end测试来覆盖本应用集成测试覆盖的内容。沙漏底层有很多的单元测试，顶层有许多的end-to-end测试，但是中间缺少集成测试。    </li>
+</ul>
+<p>就像生活中的三角形更容易保持稳定一样，测试金字塔也可能是最稳定的测试策略。</p>
+<h1 id="文章翻译自"><a href="#文章翻译自" class="headerlink" title="文章翻译自"></a>文章翻译自</h1><p><a href="https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html" target="_blank" rel="noopener">https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/16/know-your-test-doubles/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -656,81 +895,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-behavior-not-implementation/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/06/test-series.test-behavior-not-implementation/" class="post-title-link" itemprop="url">测试行为而不是实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-06-06 00:00:00 / Modified: 19:04:36" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>你的Calculator类是你最受欢迎的开源项目之一，拥有大量的用户。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="symbol">Calculator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">int</span> add(<span class="built_in">int</span> a, <span class="built_in">int</span> b) &#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>你也对该类做了测试，确保其正确工作。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">Add()</span> &#123;</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(3, <span class="params">calculator</span>.<span class="params">add</span>(2, 1)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(2, <span class="params">calculator</span>.<span class="params">add</span>(2, 0)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(1, <span class="params">calculator</span>.<span class="params">add</span>(2, -1)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>然而，一个很棒的库承诺只要你用使用它取代当前的add操作符，就可以给你的代码提供几倍的提效。你修改了你的代码以使用该类库:<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Calculator</span> &#123;</span></span><br><span class="line">  <span class="keyword">private</span> AdderFactory adderFactory;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Calculator</span><span class="params">(AdderFactor adderFactory)</span> </span>&#123; <span class="keyword">this</span>.adderFactory = adderFactory; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">    Adder adder = adderFactory.createAdder();</span><br><span class="line">    ReturnValue returnValue = adder.compute(<span class="keyword">new</span> Number(a), <span class="keyword">new</span> Number(b));</span><br><span class="line">    <span class="keyword">return</span> returnValue.convertToInteger();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这是很简单的事，但是代码的测试用例怎么处理呢？由于只修改了代码的实现而用户可见行为没变，应该是<strong>没有测试用例需要修改才对</strong>。大多数情况下，<strong>测试用例专注于测试代码的public API，且代码的实现细节无需暴露给测试用例</strong>。</p>
-<p><strong>测试与具体实现无关将使得其更易维护</strong>，因为在每次你想对实现做修改时，测试用例都无需改变。因为测试用例可以作为范例来展示你的类方法如何被使用，因此<strong>public APIs也会更容易被理解</strong>，因此即使对于实现不了解的人也可以通过阅读测试用例而明确该类该如何被使用。</p>
-<p><strong>也会有很多场景是需要对实现做测试的</strong>(例如，你要保证你的实现是从cache读取数据而不是从数据读取)，<strong>但这应该是更不常见的场景</strong>因为在大多数情况下，测试用例是独立于实现的。     </p>
-<p>对了，实现变化时测试用例的准备可能会发生变化(例如，如果你修改了类在TA的构造器中引入一个依赖对象，那么在测试用例中构造该类时时就需要创建传入这些依赖)，但只要面向用户的行为未发生改变，那么真实的测试用例内容不应需要改变。</p>
-<h2 id="高光评论"><a href="#高光评论" class="headerlink" title="高光评论"></a>高光评论</h2><ul>
-<li>This could also be extended to UI level tests (Selenium, mobile), where UI element changes should not affect tests unless the user/system flow changes (drastically).</li>
-</ul>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-interface-not-implementation/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -810,6 +974,81 @@
 <li>测试用例的最佳评价标准是：只要API的语义没变，那么测试用例就可以不变</li>
 </ul>
 <h2 id="参考文献："><a href="#参考文献：" class="headerlink" title="参考文献："></a>参考文献：</h2><p><a href="https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html" target="_blank" rel="noopener">https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-behavior-not-implementation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/06/06/test-series.test-behavior-not-implementation/" class="post-title-link" itemprop="url">测试行为而不是实现</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-06-06 00:00:00 / Modified: 19:04:36" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>你的Calculator类是你最受欢迎的开源项目之一，拥有大量的用户。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="symbol">Calculator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">int</span> add(<span class="built_in">int</span> a, <span class="built_in">int</span> b) &#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>你也对该类做了测试，确保其正确工作。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">Add()</span> &#123;</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(3, <span class="params">calculator</span>.<span class="params">add</span>(2, 1)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(2, <span class="params">calculator</span>.<span class="params">add</span>(2, 0)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(1, <span class="params">calculator</span>.<span class="params">add</span>(2, -1)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>然而，一个很棒的库承诺只要你用使用它取代当前的add操作符，就可以给你的代码提供几倍的提效。你修改了你的代码以使用该类库:<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Calculator</span> &#123;</span></span><br><span class="line">  <span class="keyword">private</span> AdderFactory adderFactory;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Calculator</span><span class="params">(AdderFactor adderFactory)</span> </span>&#123; <span class="keyword">this</span>.adderFactory = adderFactory; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">    Adder adder = adderFactory.createAdder();</span><br><span class="line">    ReturnValue returnValue = adder.compute(<span class="keyword">new</span> Number(a), <span class="keyword">new</span> Number(b));</span><br><span class="line">    <span class="keyword">return</span> returnValue.convertToInteger();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这是很简单的事，但是代码的测试用例怎么处理呢？由于只修改了代码的实现而用户可见行为没变，应该是<strong>没有测试用例需要修改才对</strong>。大多数情况下，<strong>测试用例专注于测试代码的public API，且代码的实现细节无需暴露给测试用例</strong>。</p>
+<p><strong>测试与具体实现无关将使得其更易维护</strong>，因为在每次你想对实现做修改时，测试用例都无需改变。因为测试用例可以作为范例来展示你的类方法如何被使用，因此<strong>public APIs也会更容易被理解</strong>，因此即使对于实现不了解的人也可以通过阅读测试用例而明确该类该如何被使用。</p>
+<p><strong>也会有很多场景是需要对实现做测试的</strong>(例如，你要保证你的实现是从cache读取数据而不是从数据读取)，<strong>但这应该是更不常见的场景</strong>因为在大多数情况下，测试用例是独立于实现的。     </p>
+<p>对了，实现变化时测试用例的准备可能会发生变化(例如，如果你修改了类在TA的构造器中引入一个依赖对象，那么在测试用例中构造该类时时就需要创建传入这些依赖)，但只要面向用户的行为未发生改变，那么真实的测试用例内容不应需要改变。</p>
+<h2 id="高光评论"><a href="#高光评论" class="headerlink" title="高光评论"></a>高光评论</h2><ul>
+<li>This could also be extended to UI level tests (Selenium, mobile), where UI element changes should not affect tests unless the user/system flow changes (drastically).</li>
+</ul>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html</a></p>
 
       
     </div>
@@ -932,99 +1171,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2018/01/25/failure_mode_in_distributed_system/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/01/25/failure_mode_in_distributed_system/" class="post-title-link" itemprop="url">分布式系统中的失败模式</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2018-01-25 00:00:00" itemprop="dateCreated datePublished" datetime="2018-01-25T00:00:00+08:00">2018-01-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:30:51" itemprop="dateModified" datetime="2021-06-06T13:30:51+08:00">2021-06-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>由于最近在项目中碰到了由于cpu stuck引起的系统消息系统故障，想要系统性的理解分布式系统中存在的故障模式。<br>在”Fault-Tolerant Real-Time Systems: The Problem of Replica Determinism”书中，介绍了四种分布式系统中的failure模式。</p>
-<p>#<strong><em> 一、分布式系统中存在失败模式 </em></strong></p>
-<ol>
-<li><p>Byzantine or arbitrary failure (拜占庭故障)<br> 在这种失败模式中，一个节点S可以给一部分节点发送$=true消息的同时，给另一部分节点发送$=false的消息。与此同时，节点S还可能假冒其他节点的消息，例如，对于节点Si来说$=true，但是S会以Si的身份通知其他人$=false。</p>
-</li>
-<li><p>Authentification detectable byzantine failures (认证模式下的拜占庭故障)<br> 在这种失败模式中，一个节点S，只能执行自己的拜占庭故障，而无法假冒其他节点。</p>
-</li>
-<li><p>Performance failures or Timing Failure (性能故障或称为时间故障)<br> 这种故障模式比较容易理解，节点S，返回的是正确的消息，不过消息到达时间，或者太早或者太晚。</p>
-</li>
-<li><p>Ommission failures (忽略请求或不响应故障)<br> 在这种故障模式下，节点S，回复消息的时间是无限长。</p>
-</li>
-<li><p>Crash failures (崩溃故障)<br> 在这种故障模式下，节点S，处于Ommission failures中，并且停止响应。（注：这里只是故障模式更强了，从响应时间无限长，到了停止响应。虽然效果上相同。）</p>
-</li>
-<li><p>Fail-stop failures (失败停止故障)<br> 在这种故障模式下，节点S会表现出Crash failures的行为，与此同时，我们可以假设集群中任何的正常节点都可以监测到S已经失败了。</p>
-</li>
-</ol>
-<p>注：对于本人遇到的cpu stuck问题，看起来属于Ommission failures或Crash failures。</p>
-<p>#<strong><em> 二、故障模式之间的关联 </em></strong></p>
-<p>这些故障模式，将拜占庭故障定义为最严重故障，失败停止则是最轻微故障。在这些故障模式中，我们可以对故障节点假设些什么呢？对于拜占庭故障，我们什么都无法假设；对于失败停止故障，我们可以假设全部节点都可以发现该节点failed-stop了。明白了这一点之后，我们就完全可以接受，严重程度高的故障可以包含或者覆盖严重程度低的故障。形式化的定义如下：Byzantine failures ⊃ authentification detactable byzantine failures ⊃ performance failures ⊃ ommission failures ⊃ crash failures ⊃ fail-stop failures。形式化定义可能不太好理解，举个例子，Byzantine failures完全可以接到消息，不会消息来模拟ommission failures，依次类推，更为严重的故障可以模拟出轻微故障。</p>
-<p>上述的几种故障可以分为，Value Failure(正确性故障)和Timing Failure(时间性故障)。 </p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1094,7 +1240,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
