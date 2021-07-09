@@ -153,6 +153,83 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/09/test-series.dont-mock-types-you-dont-own/" class="post-title-link" itemprop="url">不要Mock哪些不属于你的类型</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-07-09 00:00:00 / Modified: 16:46:31" itemprop="dateCreated datePublished" datetime="2021-07-09T00:00:00+08:00">2021-07-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>下面这段代码mock了一个第三方类库。这么做会有什么问题呢？<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Mock a salary payment library</span></span><br><span class="line">@Mock SalaryProcessor mockSalaryProcessor;</span><br><span class="line">@Mock TransactionStrategy mockTransactionStrategy;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">when</span>(mockSalaryProcessor.add<span class="constructor">Strategy()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">mockTransactionStrategy</span>)</span>;</span><br><span class="line"><span class="keyword">when</span>(mockSalaryProcessor.pay<span class="constructor">Salary()</span>).<span class="keyword">then</span><span class="constructor">Return(TransactionStrategy.SUCCESS)</span>;</span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">mockSalaryProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure></p>
+<h1 id="Mocking哪些不属于你的类型将使得维护变得更加困难"><a href="#Mocking哪些不属于你的类型将使得维护变得更加困难" class="headerlink" title="Mocking哪些不属于你的类型将使得维护变得更加困难"></a>Mocking哪些不属于你的类型将使得维护变得更加困难</h1><ul>
+<li>这可能会使得升级到该类库的新版本更加困难：硬编码在测试里的对于API的假设，可能会出错或是过时。在需要升级的时候，可能需要大量耗时的手工更新这些mock逻辑。在上面的例子中，如果该类库将addStrategy()的返回值修改为TransactionStrategy的一个子类(比如SalaryStrategy)，就需要所有测试中的mock更新到这个类型，尽管待测代码是不需要修改的，因为待测代码仍然可以使用TransactionStrategy。    </li>
+<li>这可能使得判断该类库的更新是否引入Bug变得更加困难。随着三方类库不停迭代，写成mock的假设可能会过时，会使得虽然测试通过但待测代码中存在着Bug。在上面的例子中，如果该类库将paySalary()的反馈值改为TransationStrategy.SCHEDULED，由于待测代码没有正确的处理这个返回值，一个潜在的Bug就产生了。然而，待测代码的维护者无法感知到问题，因为mock没有返回这个值，且测试用例仍然是通过的状态。</li>
+</ul>
+<p><strong>与其使用mock，不如使用真实实现，如果真实实现不可行，那么就用一个fake实现</strong>，该fake实现需要由类库的作者来提供。这使得维护的成本得以降低，因为上面列出来的mock可能会引入的问题不会在一个真实实现或fake实现中出现。例如：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FakeSalaryProcessor fakeProcessor = <span class="keyword">new</span> <span class="constructor">FakeSalaryProcessor()</span>; <span class="comment">// Designed for tests</span></span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">fakeProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure>
+<p><strong>如果无法在测试中使用真实实现，而且fake实现也不存在(并且类库的维护者也没有创建一个fake)，创建一个wrapper类来调用类库中的类，然后mock这个wrapper类</strong>。这减轻了维护负担，因为测试代码中的mock不再依赖第三方类库的(方法)签名，因此一旦对方签名变化是也不会产生散弹式修改。例如：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Mock MySalaryProcessor mockMySalaryProcessor; <span class="comment">// Wraps the SalaryProcessor library</span></span><br><span class="line">...</span><br><span class="line"><span class="comment">// Mock the wrapper class rather than the library itself</span></span><br><span class="line"><span class="keyword">when</span>(mockMySalaryProcessor.send<span class="constructor">Salary()</span>).<span class="keyword">then</span><span class="constructor">Return(PaymentStatus.SUCCESS)</span>;</span><br><span class="line"></span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">mockMySalaryProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure><br>为了规避上述提到的问题，首选测试wrap类+真实第三方类库实现。如果这么搞，测试三方类库真实的缺点(比如，非常慢)就会被限制在对于wrapper类的测试用例上，而不是影响整个代码库的测试执行。如果没有进行wrap类+第三方类库的真实/fake实现，那么只能解决第三方代码签名升级带来的修改问题，而无法解决当三方代码升级而mock假设不对时，可能带来的潜在bug问题。</p>
+<p>“Don’t mock types you don’t own”也被Steve Freeman和Nat Pryce在他们的书<a href="http://www.growing-object-oriented-software.com/" target="_blank" rel="noopener">Growing Object Oriented Software, Guided by Tests</a>。关于过度使用mock的缺点(即使是用来mock你自己的类)，可以看看Google Testing Blog的<a href="https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html" target="_blank" rel="noopener">这篇文章</a>。</p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2020/07/testing-on-toilet-dont-mock-types-you.html" target="_blank" rel="noopener">https://testing.googleblog.com/2020/07/testing-on-toilet-dont-mock-types-you.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1099,81 +1176,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-behavior-not-implementation/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/06/test-series.test-behavior-not-implementation/" class="post-title-link" itemprop="url">测试行为而不是实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-06-06 00:00:00 / Modified: 19:04:36" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>你的Calculator类是你最受欢迎的开源项目之一，拥有大量的用户。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="symbol">Calculator</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">int</span> add(<span class="built_in">int</span> a, <span class="built_in">int</span> b) &#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>你也对该类做了测试，确保其正确工作。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">Add()</span> &#123;</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(3, <span class="params">calculator</span>.<span class="params">add</span>(2, 1)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(2, <span class="params">calculator</span>.<span class="params">add</span>(2, 0)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(1, <span class="params">calculator</span>.<span class="params">add</span>(2, -1)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>然而，一个很棒的库承诺只要你用使用它取代当前的add操作符，就可以给你的代码提供几倍的提效。你修改了你的代码以使用该类库:<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Calculator</span> &#123;</span></span><br><span class="line">  <span class="keyword">private</span> AdderFactory adderFactory;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Calculator</span><span class="params">(AdderFactor adderFactory)</span> </span>&#123; <span class="keyword">this</span>.adderFactory = adderFactory; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">    Adder adder = adderFactory.createAdder();</span><br><span class="line">    ReturnValue returnValue = adder.compute(<span class="keyword">new</span> Number(a), <span class="keyword">new</span> Number(b));</span><br><span class="line">    <span class="keyword">return</span> returnValue.convertToInteger();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这是很简单的事，但是代码的测试用例怎么处理呢？由于只修改了代码的实现而用户可见行为没变，应该是<strong>没有测试用例需要修改才对</strong>。大多数情况下，<strong>测试用例专注于测试代码的public API，且代码的实现细节无需暴露给测试用例</strong>。</p>
-<p><strong>测试与具体实现无关将使得其更易维护</strong>，因为在每次你想对实现做修改时，测试用例都无需改变。因为测试用例可以作为范例来展示你的类方法如何被使用，因此<strong>public APIs也会更容易被理解</strong>，因此即使对于实现不了解的人也可以通过阅读测试用例而明确该类该如何被使用。</p>
-<p><strong>也会有很多场景是需要对实现做测试的</strong>(例如，你要保证你的实现是从cache读取数据而不是从数据读取)，<strong>但这应该是更不常见的场景</strong>因为在大多数情况下，测试用例是独立于实现的。     </p>
-<p>对了，实现变化时测试用例的准备可能会发生变化(例如，如果你修改了类在TA的构造器中引入一个依赖对象，那么在测试用例中构造该类时时就需要创建传入这些依赖)，但只要面向用户的行为未发生改变，那么真实的测试用例内容不应需要改变。</p>
-<h2 id="高光评论"><a href="#高光评论" class="headerlink" title="高光评论"></a>高光评论</h2><ul>
-<li>This could also be extended to UI level tests (Selenium, mobile), where UI element changes should not affect tests unless the user/system flow changes (drastically).</li>
-</ul>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/08/testing-on-toilet-test-behavior-not.html</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1243,7 +1245,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-count">20</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

@@ -20,20 +20,19 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。 归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A write v时，B何时可以read到v的变化; A write v 与B write v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。 一致性从最根本上讲，只">
+  <meta name="description" content="下面这段代码mock了一个第三方类库。这么做会有什么问题呢？12345678&#x2F;&#x2F;Mock a salary payment library@Mock SalaryProcessor mockSalaryProcessor;@Mock TransactionStrategy mockTransactionStrategy;...when(mockSalaryProcessor.addStrategy">
 <meta property="og:type" content="article">
-<meta property="og:title" content="一致性系列概述">
-<meta property="og:url" content="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:title" content="不要Mock哪些不属于你的类型">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。 归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A write v时，B何时可以read到v的变化; A write v 与B write v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。 一致性从最根本上讲，只">
-<meta property="article:published_time" content="2017-12-27T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-06T05:32:11.169Z">
+<meta property="og:description" content="下面这段代码mock了一个第三方类库。这么做会有什么问题呢？12345678&#x2F;&#x2F;Mock a salary payment library@Mock SalaryProcessor mockSalaryProcessor;@Mock TransactionStrategy mockTransactionStrategy;...when(mockSalaryProcessor.addStrategy">
+<meta property="article:published_time" content="2021-07-08T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-09T08:46:31.525Z">
 <meta property="article:author" content="coderfengyun">
-<meta property="article:tag" content="分布式系统">
-<meta property="article:tag" content="一致性">
+<meta property="article:tag" content="自动化测试">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
+<link rel="canonical" href="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/">
 
 
 <script id="page-configurations">
@@ -46,7 +45,7 @@
   };
 </script>
 
-  <title>一致性系列概述 | Hexo</title>
+  <title>不要Mock哪些不属于你的类型 | Hexo</title>
   
 
 
@@ -160,7 +159,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -173,7 +172,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          一致性系列概述
+          不要Mock哪些不属于你的类型
         </h1>
 
         <div class="post-meta">
@@ -182,23 +181,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2017-12-28 00:00:00" itemprop="dateCreated datePublished" datetime="2017-12-28T00:00:00+08:00">2017-12-28</time>
+              <time title="Created: 2021-07-09 00:00:00 / Modified: 16:46:31" itemprop="dateCreated datePublished" datetime="2021-07-09T00:00:00+08:00">2021-07-09</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:32:11" itemprop="dateModified" datetime="2021-06-06T13:32:11+08:00">2021-06-06</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
                 </span>
             </span>
 
@@ -213,12 +206,16 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。</p>
-<p>归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A <code>write</code> v时，B何时可以read到v的变化; A <code>write</code> v 与B <code>write</code> v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。</p>
-<p>一致性从最根本上讲，只包含两个原则：1、可见性原则；2、原子性原则；只要参与者满足上述两种原则同时满足上述两种原则，即可实现一致性保证。</p>
-<p>为何称之为原则？主要是因为，参与者都遵守这样的原则之后，才可以使整个系统达到预期的一致性。</p>
-<p>上述描述过于抽象，我们拆解一下：</p>
-<p>1、可见性原则：<br>  即上述描述的，A <code>write</code> v时，B何时才能观察到。 举个例子, 当参与者是同一个进程中的多个线程时，可见性的表达常用volitale表达，即可见性原则总结为了happen before关系。happen-before则表明A <code>write</code> v happens-before B <code>read</code> v。<br>  可见性保证了什么呢？看个例子<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Visibility</span> &#123;</span></span><br><span class="line">   <span class="keyword">static</span> <span class="keyword">volatile</span> a=<span class="number">0</span>;</span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">String</span>[] args)</span> </span>&#123;</span><br><span class="line">       </span><br><span class="line">        <span class="comment">//in thread 1</span></span><br><span class="line">        a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//in thread 2</span></span><br><span class="line">        System.out.printlin(a);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>2、原子性原则：<br>  如上所述，可见性是保证对于一个值v的一致性的最基本且直观的方式，当希望保证对于一组值v1, v2, v3…保证一致性时只满足可见性原则还不够，还需要满足原子性原则。即我们希望能够支持，A <code>write</code> v1, v2, v3…，全部完成后，B <code>read</code> v1,v2,v3…时才可以读到改变。</p>
+        <p>下面这段代码mock了一个第三方类库。这么做会有什么问题呢？<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Mock a salary payment library</span></span><br><span class="line">@Mock SalaryProcessor mockSalaryProcessor;</span><br><span class="line">@Mock TransactionStrategy mockTransactionStrategy;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">when</span>(mockSalaryProcessor.add<span class="constructor">Strategy()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">mockTransactionStrategy</span>)</span>;</span><br><span class="line"><span class="keyword">when</span>(mockSalaryProcessor.pay<span class="constructor">Salary()</span>).<span class="keyword">then</span><span class="constructor">Return(TransactionStrategy.SUCCESS)</span>;</span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">mockSalaryProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure></p>
+<h1 id="Mocking哪些不属于你的类型将使得维护变得更加困难"><a href="#Mocking哪些不属于你的类型将使得维护变得更加困难" class="headerlink" title="Mocking哪些不属于你的类型将使得维护变得更加困难"></a>Mocking哪些不属于你的类型将使得维护变得更加困难</h1><ul>
+<li>这可能会使得升级到该类库的新版本更加困难：硬编码在测试里的对于API的假设，可能会出错或是过时。在需要升级的时候，可能需要大量耗时的手工更新这些mock逻辑。在上面的例子中，如果该类库将addStrategy()的返回值修改为TransactionStrategy的一个子类(比如SalaryStrategy)，就需要所有测试中的mock更新到这个类型，尽管待测代码是不需要修改的，因为待测代码仍然可以使用TransactionStrategy。    </li>
+<li>这可能使得判断该类库的更新是否引入Bug变得更加困难。随着三方类库不停迭代，写成mock的假设可能会过时，会使得虽然测试通过但待测代码中存在着Bug。在上面的例子中，如果该类库将paySalary()的反馈值改为TransationStrategy.SCHEDULED，由于待测代码没有正确的处理这个返回值，一个潜在的Bug就产生了。然而，待测代码的维护者无法感知到问题，因为mock没有返回这个值，且测试用例仍然是通过的状态。</li>
+</ul>
+<p><strong>与其使用mock，不如使用真实实现，如果真实实现不可行，那么就用一个fake实现</strong>，该fake实现需要由类库的作者来提供。这使得维护的成本得以降低，因为上面列出来的mock可能会引入的问题不会在一个真实实现或fake实现中出现。例如：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FakeSalaryProcessor fakeProcessor = <span class="keyword">new</span> <span class="constructor">FakeSalaryProcessor()</span>; <span class="comment">// Designed for tests</span></span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">fakeProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure>
+<p><strong>如果无法在测试中使用真实实现，而且fake实现也不存在(并且类库的维护者也没有创建一个fake)，创建一个wrapper类来调用类库中的类，然后mock这个wrapper类</strong>。这减轻了维护负担，因为测试代码中的mock不再依赖第三方类库的(方法)签名，因此一旦对方签名变化是也不会产生散弹式修改。例如：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Mock MySalaryProcessor mockMySalaryProcessor; <span class="comment">// Wraps the SalaryProcessor library</span></span><br><span class="line">...</span><br><span class="line"><span class="comment">// Mock the wrapper class rather than the library itself</span></span><br><span class="line"><span class="keyword">when</span>(mockMySalaryProcessor.send<span class="constructor">Salary()</span>).<span class="keyword">then</span><span class="constructor">Return(PaymentStatus.SUCCESS)</span>;</span><br><span class="line"></span><br><span class="line">MyPaymentService myPaymentService = <span class="keyword">new</span> <span class="constructor">MyPaymentService(<span class="params">mockMySalaryProcessor</span>)</span>;</span><br><span class="line"><span class="keyword">assert</span><span class="constructor">That(<span class="params">myPaymentService</span>.<span class="params">sendPayment</span>()</span>).is<span class="constructor">EqualTo(PaymentStatus.SUCCESS)</span>;</span><br></pre></td></tr></table></figure><br>为了规避上述提到的问题，首选测试wrap类+真实第三方类库实现。如果这么搞，测试三方类库真实的缺点(比如，非常慢)就会被限制在对于wrapper类的测试用例上，而不是影响整个代码库的测试执行。如果没有进行wrap类+第三方类库的真实/fake实现，那么只能解决第三方代码签名升级带来的修改问题，而无法解决当三方代码升级而mock假设不对时，可能带来的潜在bug问题。</p>
+<p>“Don’t mock types you don’t own”也被Steve Freeman和Nat Pryce在他们的书<a href="http://www.growing-object-oriented-software.com/" target="_blank" rel="noopener">Growing Object Oriented Software, Guided by Tests</a>。关于过度使用mock的缺点(即使是用来mock你自己的类)，可以看看Google Testing Blog的<a href="https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html" target="_blank" rel="noopener">这篇文章</a>。</p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2020/07/testing-on-toilet-dont-mock-types-you.html" target="_blank" rel="noopener">https://testing.googleblog.com/2020/07/testing-on-toilet-dont-mock-types-you.html</a></p>
 
     </div>
 
@@ -228,8 +225,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="tag"># 分布式系统</a>
-              <a href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" rel="tag"># 一致性</a>
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
           </div>
 
         
@@ -238,13 +234,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/" rel="prev" title="Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查">
-      <i class="fa fa-chevron-left"></i> Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查
+    <a href="/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/" rel="prev" title="系统划分为模块的范式">
+      <i class="fa fa-chevron-left"></i> 系统划分为模块的范式
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2018/01/25/failure_mode_in_distributed_system/" rel="next" title="分布式系统中的失败模式">
-      分布式系统中的失败模式 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -304,6 +297,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Mocking哪些不属于你的类型将使得维护变得更加困难"><span class="nav-number">1.</span> <span class="nav-text">Mocking哪些不属于你的类型将使得维护变得更加困难</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#翻译自"><span class="nav-number">2.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -424,7 +418,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'coderfengyun.github.io',
       owner       : 'coderfengyun',
       admin       : ['coderfengyun'],
-      id          : '1aa0346f56b09943dfcad04aa838443d',
+      id          : 'ed34785abfcc9307ffe71a1e413746b3',
         language: 'zh-CN',
       distractionFreeMode: true
     });
