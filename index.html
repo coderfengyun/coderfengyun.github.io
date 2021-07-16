@@ -153,6 +153,82 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/16/test-series.exercise-service-call-contracts-in-tests/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/16/test-series.exercise-service-call-contracts-in-tests/" class="post-title-link" itemprop="url">在测试中验证服务契约</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-07-16 00:00:00 / Modified: 19:06:24" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>下面的测试mock掉了对CloudService服务的调用。这样的测试能够给我们信心，说：对该服务的调用是正常工作的吗？</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Test public void upload<span class="constructor">FileToCloudStorage()</span> &#123;</span><br><span class="line">  <span class="keyword">when</span>(mockCloudService.write(</span><br><span class="line">          <span class="module-access"><span class="module"><span class="identifier">WriteRequest</span>.</span></span><span class="keyword">new</span><span class="constructor">Builder()</span>.set<span class="constructor">UserId(“<span class="params">testuser</span>”)</span>.set<span class="constructor">FileType(“<span class="params">plain</span><span class="operator">/</span><span class="params">text</span>”)</span>...))</span><br><span class="line">    .<span class="keyword">then</span><span class="constructor">Return(WriteResponse.<span class="params">newBuilder</span>()</span>.set<span class="constructor">UploadId(“<span class="params">uploadId</span>”)</span>.build<span class="literal">()</span>);</span><br><span class="line"></span><br><span class="line">  CloudUploader cloudUploader = <span class="keyword">new</span> <span class="constructor">CloudUploader(<span class="params">mockCloudService</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  Uri uri = cloudUploader.upload<span class="constructor">File(<span class="params">new</span> File(“<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>”)</span>);</span><br><span class="line">  <span class="comment">// The uploaded file URI contains the user ID, file type, and upload ID. (Or does it?)</span></span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">That(<span class="params">uri</span>)</span>.is<span class="constructor">EqualTo(<span class="params">new</span> Uri(“<span class="operator">/</span><span class="params">testuser</span><span class="operator">/</span><span class="params">text</span><span class="operator">/</span><span class="params">uploadId</span>.<span class="params">txt</span>”)</span>);</span><br></pre></td></tr></table></figure>
+<p><strong>很多事情可能出错</strong>，尤其是当服务契约变得复杂时。例如，plain/text可能并不是一个有效值，同时也没有办法验证上传文件后生成的URI是正确的。<br><strong>如果待测代码依赖该服务的契约，首选直接调用TA</strong>，而不是把这个调用mock掉。这可以给你给你更多自信，相信自己正确的使用了对应的服务：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Test public void upload<span class="constructor">FileToCloudStorage()</span> &#123;</span><br><span class="line">  CloudUploader cloudUploader = <span class="keyword">new</span> <span class="constructor">CloudUploader(<span class="params">cloudService</span>)</span>;</span><br><span class="line">  Uri uri = cloudUploader.upload<span class="constructor">File(”<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>”)</span>;</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">That(<span class="params">cloudService</span>.<span class="params">retrieveFile</span>(<span class="params">uri</span>)</span>).is<span class="constructor">EqualTo(<span class="params">readContent</span>(“<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>你可以如何调用这个服务呢？      </p>
+<ol>
+<li><strong>使用一个Fake</strong>。一个fake是一个快速且轻量的实现，同时TA还表现的与真实服务一致。fake通常由服务的owner提供；不要创建你自己的fake，除非你可以保证fake的行为能够始终与真是实现保持一致。关于fake，参见：testing.googleblog.com/2013/06/testing-on-toilet-fake-your-way-to.html。</li>
+<li><strong>使用一个Hermetic server</strong>。这是一个在测试用例中拉起来的真实服务，并且与测试用例跑在同一台机器上。使用hermetic server的一个问题是，启动它以及与它交互会使测试执行变慢。关于hermetic servers，参考testing.googleblog.com/2012/10/hermetic-servers.html。     </li>
+</ol>
+<p>如果你依赖的服务没有fake或是hermetic server，mock就变成了你唯一的选择。但是如果你的测试用例没有真的验证服务调用契约，你必须使用额外的手段来保证服务调用是没问题的，比如通过一组详尽的end-to-end测试套件，或是依赖手工测试(这是很低效，且很难扩展的)。</p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2018/11/testing-on-toilet-exercise-service-call.html" target="_blank" rel="noopener">https://testing.googleblog.com/2018/11/testing-on-toilet-exercise-service-call.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1078,108 +1154,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-interface-not-implementation/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/06/test-series.test-interface-not-implementation/" class="post-title-link" itemprop="url">测试接口而不是实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-06-06 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-10 15:43:49" itemprop="dateModified" datetime="2021-06-10T15:43:49+08:00">2021-06-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="这个类真的需要测试吗？"><a href="#这个类真的需要测试吗？" class="headerlink" title="这个类真的需要测试吗？"></a>这个类真的需要测试吗？</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserInfoValidator</span> &#123;</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">validate</span><span class="params">(UserInfo info)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (info.getDateOfBirth().isInFuture()) &#123; <span class="keyword">throw</span> <span class="keyword">new</span> ValidationException()); &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>乍一看，这个类的方法包含了一些逻辑，所以可能最好测试一下。<strong>但是如果唯一的调用者如下所示，又该怎么讲呢？</strong><br><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">public</span> <span class="keyword">class</span> UserInfoService &#123;</span><br><span class="line">  private UserInfoValidator <span class="keyword">validator</span>;</span><br><span class="line">  <span class="built_in">public</span> <span class="type">void</span> save(UserInfo <span class="keyword">info</span>) &#123;</span><br><span class="line">    <span class="keyword">validator</span>.<span class="keyword">validate</span>(<span class="keyword">info</span>); // Throw an <span class="keyword">exception</span> <span class="keyword">if</span> the <span class="keyword">value</span> <span class="keyword">is</span> invalid.</span><br><span class="line">    writeToDatabase(<span class="keyword">info</span>);   </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>答案可能会变成：<strong>UserInfoValidator类可能不需要测试了</strong>，因为所有路径都可以通过UserInfoService被测试到。最重要的分别在于<strong>UserInfoValidator类是实现细节，而不是一个public API。</strong></p>
-<p><strong>一个public API可以被多个用户使用</strong>，这些用户又可能将所有入参的任意组合传给TA的方法。<strong>你想要保证这些组合被完整的测到了</strong>，以防止使用者在使用这些API时碰到问题。public API的代表有：在代码库的另一处被使用的类，以及在整个代码库到处被使用的Utils类等。<br><strong>一个实现细节类存在的价值就是来支撑public APIs</strong>，并且只被极少数调用者使用(大多数情况都只有一个)。<strong>这些类有时可以间接的做测试覆盖</strong>，如何做间接测试覆盖？通过测试调用它的public APIs。<br><strong>测试实现细节类在许多场景下还是有其意义的</strong>，例如，有时这些实现细节类很复杂，亦或是很难通过public APIs测试到。当你确实要测试TA们时，<strong>TA们往往也不需要像public APIs一样的测试深度</strong>，因为有些输入永远也不会被传递给TA们(在上面的代码示例中，如果UserInfoService保证了UserInfo一定不为null，那么就没必要测试UserInfoValidator.validate在info为null时会如何表现了，由于这永远不会发生)。   </p>
-<p>实现细节类有时可以被看成私有方法，只不过恰巧作为一个独立的类存在而已，因为你一定不会想去直接测试私有方法。    </p>
-<p><strong>你也应该尽力控制实现细节类的可见性</strong>，比如在Java中将其设置为包内私有。    </p>
-<p><strong>过度测试实现细节的类容易导致如下问题:</strong>    </p>
-<ul>
-<li><strong>代码更难以维护，因为你需要频繁的修改测试用例</strong>， 比如当改变一个实现细节的类的方法签名，或是做一个简单的重构。如果测试是通过public APIs覆盖的，那么这些变更就完全不会影响到测试用例。   </li>
-<li><strong>如果只通过实现细节类来测试行为，你可能会对代码产生错误的自信</strong>，因为同样的代码路径在public APIs使用时可能并不work。<strong>并且在重构时也要花更多的心思</strong>，因为如果不是所有路径都通过public APIs来测试的，那么很难保证public API的行为在重构中不受影响。</li>
-</ul>
-<h2 id="可能的问题"><a href="#可能的问题" class="headerlink" title="可能的问题"></a>可能的问题</h2><p>Q1: 这是在反对测试金字塔理论，而鼓励更大规模的测试(集成测试，而不是单元测试)吗？<br>A1：个人认为本文与测试金字塔(更专注于小规模测试)并不冲突，因为用pubic APIs的方式依然可以测试代码的一小部分。只不过，用过public APIs来测多个类而不是只测一个类，理应不是什么问题。    </p>
-<p>Q2：一个public方法就是一个public API，与被多少调用者使用无关。整个关于实现细节类的讨论都没什么意义。一个public方法应该被测试，作者错误认知的源头在于，TA看了一眼源码，然后得出这样的结论：  </p>
-<ul>
-<li>[哦，这是实现细节类，我不用测TA了]</li>
-<li>[哦，这个类只被另外一个方法使用了，我可以相应的调整我的测试了]<br>一个待测类应该被作为一个黑盒，不要对其做任何假设，就把它当做潜在的toxic测试。永远不应该去看你要测试的类的源码。只有在你想要修改代码时，才需要去看具体实现。</li>
-</ul>
-<p>A2: 关于一个类应该被作为黑盒测试，本人没有任何异议。但不是所有的类都应该被同等对待。只是因为开发者决定将一些logic放到独立的类里，并不能自然的指向这些逻辑就需要被深度测试了。<br>关于一个类要做什么程度的测试，不决定于TA如何被使用，也不决定于TA的实现：如果一个类只在一个地方使用，且其他地方访问不到TA，那么TA也不是public API。所以这一切与实现无关。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>上述Q2中的问题，实际上极具含金量，短短几句话道出了测试应该怎么做。博文作者对于该说法深表赞同。然而唯一的认知差距在于是否所有独立的类的public方法都需要深度测试，<br>作者认为，可以认为实现细节类在其契约上就清晰的表达，该类不应该被其他人使用。这样Q2就与本文没有冲突了。</p>
-<p>总结一下测试的要点：</p>
-<ul>
-<li>把待测API/系统作为黑盒，只关心其公开的契约，不关心其实现</li>
-<li>过渡关心实现细节，会给后续维护带来较重负担</li>
-<li>测试用例的最佳评价标准是：只要API的语义没变，那么测试用例就可以不变</li>
-</ul>
-<h2 id="参考文献："><a href="#参考文献：" class="headerlink" title="参考文献："></a>参考文献：</h2><p><a href="https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html" target="_blank" rel="noopener">https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -1245,7 +1223,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

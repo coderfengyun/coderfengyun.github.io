@@ -22,25 +22,25 @@
 
   <meta property="og:type" content="website">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://coderfengyun.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:url" content="http://coderfengyun.github.io/page/3/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="article:author" content="coderfengyun">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://coderfengyun.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">
+<link rel="canonical" href="http://coderfengyun.github.io/page/3/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : false,
+    isHome : true,
     isPost : false,
     lang   : 'default'
   };
 </script>
 
-  <title>Tag: 架构设计 | Hexo</title>
+  <title>Hexo</title>
   
 
 
@@ -147,75 +147,96 @@
         <div class="content-wrap">
           
 
-          <div class="content tag">
+          <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2015/06/01/Java%20Memory%20And%20GC%20Generation/">
 
-  
-  
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <h2 class="collection-header">架构设计
-          <small>Tag</small>
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2015/06/01/Java%20Memory%20And%20GC%20Generation/" class="post-title-link" itemprop="url">Java内存--GC分代</a>
         </h2>
-      </div>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-06-01 00:00:00" itemprop="dateCreated datePublished" datetime="2015-06-01T00:00:00+08:00">2015-06-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-06-06 13:44:13" itemprop="dateModified" datetime="2021-06-06T13:44:13+08:00">2021-06-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2021</span>
+          <p>作为Java程序员，很容易喜爱垃圾回收（garbage collection），无需自己释放内存。然而GC行为的基本内存模型是什么？其中，又有很多的概念，像young generation, old generation以及permanent generation，并且她们之间又回产生怎样的交互呢？</p>
+<p>本文试图解决上述问题。下面将以最为浅显直接的图示来说明这几部分之间的关系。</p>
+<p>#<strong><em> JVM内存组成 </em></strong></p>
+<p>JVM内存由两部分组成: heap(堆空间)+ non-heap(非堆空间)</p>
+<p>#<strong><em> Heap堆空间的组成 </em></strong></p>
+<p>Heap堆空间分为young区和old区，其具体的组成结构关系如下图所示。<br><img src="/images/2-1_Heap空间的结构.png" alt="Figure1: Heap堆空间的结构"></p>
+<p>从上图中，我们可以看出，Heap空间主要分为young区和old区，而其中young区由Eden Generation，Survivor Generation（多个）组成; 其中old区则由tenured generation组成。</p>
+<p>并且，对象在这三个代中的流动时机也在图中有所表示。首先，当Eden Generation达到阈值，则会触发minor gc，如果对象依然有引用，则会被迁移到其中一个Survivor Generation中；如果对象在Survivor Generation中生存的时间足够长，则会被迁移到tenured generation中。</p>
+<p><img src="/images/2-2_micor-major-full.jpg" alt="Figure2: minor gc, major gc, full gc"></p>
+<p>未完待续…</p>
+
+      
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2021-06-24T00:00:00+08:00"
-              content="2021-06-24">
-          06-24
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/" itemprop="url">
-            <span itemprop="name">系统划分为模块的范式</span>
-          </a>
-      </div>
-
-    </header>
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
   </article>
-    <div class="collection-year">
-      <span class="collection-header">2015</span>
-    </div>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2015-06-18T00:00:00+08:00"
-              content="2015-06-18">
-          06-18
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2015/06/18/Richard%E6%88%90%E7%86%9F%E5%BA%A6%E6%A8%A1%E5%9E%8B/" itemprop="url">
-            <span itemprop="name">Richard成熟度模型</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-    </div>
-  </div>
   
   
   
 
+
   
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+  </nav>
 
 
 
