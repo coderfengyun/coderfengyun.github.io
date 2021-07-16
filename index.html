@@ -237,6 +237,97 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/16/test-series.web-testing-made-easier-debug-ids/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/16/test-series.web-testing-made-easier-debug-ids/" class="post-title-link" itemprop="url">通过ID属性使得Web测试更简单</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-07-16 00:00:00 / Modified: 19:44:38" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/UI-Test/" itemprop="url" rel="index"><span itemprop="name">UI Test</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>在Element上增加ID属性可以使TA更容易写跟DOM交互的测试</strong>(例如WebDriver测试)。考虑下面的DOM，包含两个按钮，这两个按钮只有文案不同：</p>
+<table>
+<thead>
+<tr>
+<th>Save Button</th>
+<th>Edit Button</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;div class=”button”&gt;Save&lt;div&gt;</td>
+<td>&lt;div class=”button”&gt;Edit&lt;div&gt;</td>
+</tr>
+</tbody>
+</table>
+<p>在这种情况下，如何告诉WebDriver来跟”Save”按钮交互呢？你有几个选择。<strong>一个选择是通过CSS selector来跟按钮交互：</strong><br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">div</span>.button</span><br></pre></td></tr></table></figure><br>然而，这种搞法不足以找到一个确定的按钮，且在CSS里也没有机制能够通过文案来筛选Dom节点。<strong>另一个选项是写XPath，不过通常比较脆弱，所以不推荐这么搞：</strong><br><figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//<span class="keyword">div</span>[@class=<span class="string">'button'</span> <span class="keyword">and</span> <span class="keyword">text</span>()=<span class="string">'Save'</span>]</span><br></pre></td></tr></table></figure><br><strong>最好的选择是增加一个唯一且具备层次化特征的ID</strong>，这使得每个组件通过在其子组件前加上自己的ID。各个按钮的ID如下：<br><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">save</span>-button</span><br><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">edit</span>-button</span><br></pre></td></tr></table></figure><br>考虑另一个例子。<strong>让我们为Angular中重复出现的UI元素设置ID</strong>，使用ng-repeat就可以搞定。设置一个index可以用于区分不同的元素：<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;tr <span class="attribute">id</span>=<span class="string">"feedback-&#123;&#123;<span class="variable">$index</span>&#125;&#125;"</span> <span class="attribute">class</span>=<span class="string">"feedback"</span> <span class="attribute">ng-repeat</span>=<span class="string">"feedback in ctrl.feedbacks"</span> &gt;</span><br></pre></td></tr></table></figure><br><strong>简单来说：ID设置是简单的，且会给测试带来巨大改变</strong>。请尽快把ID加上。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
     <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/09/test-series.dont-mock-types-you-dont-own/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1131,87 +1222,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/07/test-series.how-to-define-good-test/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="coderfengyun">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/07/test-series.how-to-define-good-test/" class="post-title-link" itemprop="url">怎样才能称之为好的测试用例</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-06-07 00:00:00 / Modified: 19:23:18" itemprop="dateCreated datePublished" datetime="2021-06-07T00:00:00+08:00">2021-06-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Background："><a href="#Background：" class="headerlink" title="Background："></a>Background：</h1><p>Test Case也是代码，但好像又跟真实逻辑中的代码有所不同，那么不同在哪里呢？有这些不同会导致评价测试用例的标准有什么独特之处呢？</p>
-<p>本文试图回答上述两个问题：</p>
-<ol>
-<li>Test Case作为代码与业务逻辑代码的异同</li>
-<li>Test Case评价的标准</li>
-</ol>
-<h1 id="Test-Case与业务代码的评价标准有所不同"><a href="#Test-Case与业务代码的评价标准有所不同" class="headerlink" title="Test Case与业务代码的评价标准有所不同"></a>Test Case与业务代码的评价标准有所不同</h1><h2 id="DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”"><a href="#DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”" class="headerlink" title="DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)"></a>DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)</h2><p>下面的测试用例遵循了DRY原则(“Don’t Repeat Yourself”)，DRY鼓励代码重用而不是复制，例如通过提出helper方法或者使用循环。但这是一个好的测试用例吗？<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.users = [User(<span class="string">'alice'</span>), User(<span class="string">'bob'</span>)]  # This field can be reused across tests.</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  self._RegisterAllUsers()</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:  # Use a for-loop <span class="keyword">to</span> verify that all<span class="built_in"> users </span>are registered.</span><br><span class="line">    self.assertTrue(self.forum.HasRegisteredUser(user))</span><br><span class="line"></span><br><span class="line">def _RegisterAllUsers(self):  # This method can be reused across tests.</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:</span><br><span class="line">    self.forum.Register(user)</span><br></pre></td></tr></table></figure><br>尽管测试的主体还是很简洁的，但读者需要在脑海里做一些运算才能理解这个测试用例的意图，例如，通过从setUp()到_RegisterAllUsers()跟踪self.users的使用流程才能真正理解用例的含义。<strong>因为测试用例没有测试用例来保证了，TA需要保证人能够直观的分析其正确性</strong>，即使是这么搞会带来很多的重复代码。这也意味着尽管DRY是生产代码的最佳实践，但DRY原则是不完全适用于测试用例的编写的。</p>
-<p><strong>在测试用例中我们可以使用DAMP(“Desciptive and Meaningful Phrases”)，DAMP强调可读性高于唯一性</strong>。尽管应用该原则会导致代码重复(例如，重复了简单代码)，但这使得测试用例更容易被认为是”明显没问题”。让我们就这上面的case，用DAMP原则改写一下：</p>
-<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  # Create the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of relying on<span class="built_in"> users </span>created <span class="keyword">in</span> setUp.</span><br><span class="line">  user1 = User(<span class="string">'alice'</span>)</span><br><span class="line">  user2 = User(<span class="string">'bob'</span>)</span><br><span class="line"></span><br><span class="line">  # Register the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of <span class="keyword">in</span> a helper method, <span class="keyword">and</span> don<span class="string">'t use a for-loop.</span></span><br><span class="line"><span class="string">  self.forum.Register(user1)</span></span><br><span class="line"><span class="string">  self.forum.Register(user2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  # Assert each user individually instead of using a for-loop.</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user1))</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user2))</span></span><br></pre></td></tr></table></figure>
-<p>注意，<strong>DRY原则在测试中还是有其意义的</strong>；例如，使用一个helper方法来创建value object可以从测试用例的主体逻辑中移除过多的细节，从而提升清晰度。理想情况下，测试用例可以做到既可读又没有重复，但有些时候需要在二者之间做个取舍。<strong>当写测试用例时，如果碰到了需要在DRY与DAMP之间做个选择，首选DAMP</strong>。</p>
-<h2 id="业务代码有测试用例保障，测试用例没有测试用例保障"><a href="#业务代码有测试用例保障，测试用例没有测试用例保障" class="headerlink" title="业务代码有测试用例保障，测试用例没有测试用例保障"></a>业务代码有测试用例保障，测试用例没有测试用例保障</h2><p>如上文中提到的，业务代码有测试用例而测试用例没有测试用例了。这样的差异会导致二者的最终分化。<br>即由于业务代码有测试用例，因此TA的组织形式可以相对复杂，应用各种设计模式，采用DRY原则保证避免散弹式修改，因为TA明白，<strong>其正确性是依赖于测试用例保证的</strong>，而不是依赖人眼保证的。人在业务代码的正确性保证方面做的是<strong>没明显问题</strong><br>测试用例则不然，由于没有测试用例的测试用例保障，因此其<strong>正确性完全依赖于人眼保证</strong>，即Review测试用例需要能够做到<strong>明显没问题</strong>。<br>因此，测试用例越容易被看懂，越容易判断正确性，越好。     </p>
-<h1 id="Test-Case评价的标准"><a href="#Test-Case评价的标准" class="headerlink" title="Test Case评价的标准"></a>Test Case评价的标准</h1><h2 id="测试用例稳定性"><a href="#测试用例稳定性" class="headerlink" title="测试用例稳定性"></a>测试用例稳定性</h2><p>TBD…</p>
-<h2 id="测试用例可读性及明显没问题"><a href="#测试用例可读性及明显没问题" class="headerlink" title="测试用例可读性及明显没问题"></a>测试用例可读性及明显没问题</h2><p>TBD…</p>
-<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html" target="_blank" rel="noopener">https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1281,12 +1291,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-count">22</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">categories</span>
       </div>
       <div class="site-state-item site-state-tags">

@@ -20,20 +20,20 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。 归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A write v时，B何时可以read到v的变化; A write v 与B write v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。 一致性从最根本上讲，只">
+  <meta name="description" content="在Element上增加ID属性可以使TA更容易写跟DOM交互的测试(例如WebDriver测试)。考虑下面的DOM，包含两个按钮，这两个按钮只有文案不同：    Save Button Edit Button     &lt;div class&#x3D;”button”&gt;Save&lt;div&gt; &lt;div class&#x3D;”button”&gt;Edit&lt;div&gt;    在这种情">
 <meta property="og:type" content="article">
-<meta property="og:title" content="一致性系列概述">
-<meta property="og:url" content="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:title" content="通过ID属性使得Web测试更简单">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/07/16/test-series.web-testing-made-easier-debug-ids/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。 归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A write v时，B何时可以read到v的变化; A write v 与B write v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。 一致性从最根本上讲，只">
-<meta property="article:published_time" content="2017-12-27T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-06T05:32:11.169Z">
+<meta property="og:description" content="在Element上增加ID属性可以使TA更容易写跟DOM交互的测试(例如WebDriver测试)。考虑下面的DOM，包含两个按钮，这两个按钮只有文案不同：    Save Button Edit Button     &lt;div class&#x3D;”button”&gt;Save&lt;div&gt; &lt;div class&#x3D;”button”&gt;Edit&lt;div&gt;    在这种情">
+<meta property="article:published_time" content="2021-07-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-16T11:44:38.651Z">
 <meta property="article:author" content="coderfengyun">
-<meta property="article:tag" content="分布式系统">
-<meta property="article:tag" content="一致性">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
+<link rel="canonical" href="http://coderfengyun.github.io/2021/07/16/test-series.web-testing-made-easier-debug-ids/">
 
 
 <script id="page-configurations">
@@ -46,7 +46,7 @@
   };
 </script>
 
-  <title>一致性系列概述 | Hexo</title>
+  <title>通过ID属性使得Web测试更简单 | Hexo</title>
   
 
 
@@ -160,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/16/test-series.web-testing-made-easier-debug-ids/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -173,7 +173,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          一致性系列概述
+          通过ID属性使得Web测试更简单
         </h1>
 
         <div class="post-meta">
@@ -182,23 +182,25 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2017-12-28 00:00:00" itemprop="dateCreated datePublished" datetime="2017-12-28T00:00:00+08:00">2017-12-28</time>
+              <time title="Created: 2021-07-16 00:00:00 / Modified: 19:44:38" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-06 13:32:11" itemprop="dateModified" datetime="2021-06-06T13:32:11+08:00">2021-06-06</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/UI-Test/" itemprop="url" rel="index"><span itemprop="name">UI Test</span></a>
                 </span>
             </span>
 
@@ -213,12 +215,22 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>日常编程中，接触了很多种类的一致性，这里希望把一致性中基本原理与原则做一个总结。</p>
-<p>归纳的说，一致性描述的问题是，在什么情况下参与者可以观察到对方的变化，并以怎样的规范才能保证对于临界区的处理可控。即参与者A与B，当A <code>write</code> v时，B何时可以read到v的变化; A <code>write</code> v 与B <code>write</code> v 谁发生在前。编程者须遵循何种规范才能保证对于v的修改是符合意愿的。</p>
-<p>一致性从最根本上讲，只包含两个原则：1、可见性原则；2、原子性原则；只要参与者满足上述两种原则同时满足上述两种原则，即可实现一致性保证。</p>
-<p>为何称之为原则？主要是因为，参与者都遵守这样的原则之后，才可以使整个系统达到预期的一致性。</p>
-<p>上述描述过于抽象，我们拆解一下：</p>
-<p>1、可见性原则：<br>  即上述描述的，A <code>write</code> v时，B何时才能观察到。 举个例子, 当参与者是同一个进程中的多个线程时，可见性的表达常用volitale表达，即可见性原则总结为了happen before关系。happen-before则表明A <code>write</code> v happens-before B <code>read</code> v。<br>  可见性保证了什么呢？看个例子<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Visibility</span> &#123;</span></span><br><span class="line">   <span class="keyword">static</span> <span class="keyword">volatile</span> a=<span class="number">0</span>;</span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">String</span>[] args)</span> </span>&#123;</span><br><span class="line">       </span><br><span class="line">        <span class="comment">//in thread 1</span></span><br><span class="line">        a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//in thread 2</span></span><br><span class="line">        System.out.printlin(a);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>2、原子性原则：<br>  如上所述，可见性是保证对于一个值v的一致性的最基本且直观的方式，当希望保证对于一组值v1, v2, v3…保证一致性时只满足可见性原则还不够，还需要满足原子性原则。即我们希望能够支持，A <code>write</code> v1, v2, v3…，全部完成后，B <code>read</code> v1,v2,v3…时才可以读到改变。</p>
+        <p><strong>在Element上增加ID属性可以使TA更容易写跟DOM交互的测试</strong>(例如WebDriver测试)。考虑下面的DOM，包含两个按钮，这两个按钮只有文案不同：</p>
+<table>
+<thead>
+<tr>
+<th>Save Button</th>
+<th>Edit Button</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;div class=”button”&gt;Save&lt;div&gt;</td>
+<td>&lt;div class=”button”&gt;Edit&lt;div&gt;</td>
+</tr>
+</tbody>
+</table>
+<p>在这种情况下，如何告诉WebDriver来跟”Save”按钮交互呢？你有几个选择。<strong>一个选择是通过CSS selector来跟按钮交互：</strong><br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">div</span>.button</span><br></pre></td></tr></table></figure><br>然而，这种搞法不足以找到一个确定的按钮，且在CSS里也没有机制能够通过文案来筛选Dom节点。<strong>另一个选项是写XPath，不过通常比较脆弱，所以不推荐这么搞：</strong><br><figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//<span class="keyword">div</span>[@class=<span class="string">'button'</span> <span class="keyword">and</span> <span class="keyword">text</span>()=<span class="string">'Save'</span>]</span><br></pre></td></tr></table></figure><br><strong>最好的选择是增加一个唯一且具备层次化特征的ID</strong>，这使得每个组件通过在其子组件前加上自己的ID。各个按钮的ID如下：<br><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">save</span>-button</span><br><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">edit</span>-button</span><br></pre></td></tr></table></figure><br>考虑另一个例子。<strong>让我们为Angular中重复出现的UI元素设置ID</strong>，使用ng-repeat就可以搞定。设置一个index可以用于区分不同的元素：<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;tr <span class="attribute">id</span>=<span class="string">"feedback-&#123;&#123;<span class="variable">$index</span>&#125;&#125;"</span> <span class="attribute">class</span>=<span class="string">"feedback"</span> <span class="attribute">ng-repeat</span>=<span class="string">"feedback in ctrl.feedbacks"</span> &gt;</span><br></pre></td></tr></table></figure><br><strong>简单来说：ID设置是简单的，且会给测试带来巨大改变</strong>。请尽快把ID加上。</p>
 
     </div>
 
@@ -228,8 +240,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="tag"># 分布式系统</a>
-              <a href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" rel="tag"># 一致性</a>
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
           </div>
 
         
@@ -238,12 +250,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/" rel="prev" title="Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查">
-      <i class="fa fa-chevron-left"></i> Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查
+    <a href="/2021/07/09/test-series.dont-mock-types-you-dont-own/" rel="prev" title="不要Mock哪些不属于你的类型">
+      <i class="fa fa-chevron-left"></i> 不要Mock哪些不属于你的类型
     </a></div>
       <div class="post-nav-item">
-    <a href="/2018/01/25/failure_mode_in_distributed_system/" rel="next" title="分布式系统中的失败模式">
-      分布式系统中的失败模式 <i class="fa fa-chevron-right"></i>
+    <a href="/2021/07/16/test-series.exercise-service-call-contracts-in-tests/" rel="next" title="在测试中验证服务契约">
+      在测试中验证服务契约 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -424,7 +436,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'coderfengyun.github.io',
       owner       : 'coderfengyun',
       admin       : ['coderfengyun'],
-      id          : '1aa0346f56b09943dfcad04aa838443d',
+      id          : 'b42e03f881e7f320a343d3647ca174d5',
         language: 'zh-CN',
       distractionFreeMode: true
     });
