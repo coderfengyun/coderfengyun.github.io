@@ -27,7 +27,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="在Element上增加ID属性可以使TA更容易写跟DOM交互的测试(例如WebDriver测试)。考虑下面的DOM，包含两个按钮，这两个按钮只有文案不同：    Save Button Edit Button     &lt;div class&#x3D;”button”&gt;Save&lt;div&gt; &lt;div class&#x3D;”button”&gt;Edit&lt;div&gt;    在这种情">
 <meta property="article:published_time" content="2021-07-15T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-16T11:44:38.651Z">
+<meta property="article:modified_time" content="2021-07-16T11:46:20.082Z">
 <meta property="article:author" content="coderfengyun">
 <meta property="article:tag" content="自动化测试">
 <meta property="article:tag" content="ToTT">
@@ -184,7 +184,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2021-07-16 00:00:00 / Modified: 19:44:38" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
+              <time title="Created: 2021-07-16 00:00:00 / Modified: 19:46:20" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,6 +231,7 @@
 </tbody>
 </table>
 <p>在这种情况下，如何告诉WebDriver来跟”Save”按钮交互呢？你有几个选择。<strong>一个选择是通过CSS selector来跟按钮交互：</strong><br><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">div</span>.button</span><br></pre></td></tr></table></figure><br>然而，这种搞法不足以找到一个确定的按钮，且在CSS里也没有机制能够通过文案来筛选Dom节点。<strong>另一个选项是写XPath，不过通常比较脆弱，所以不推荐这么搞：</strong><br><figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//<span class="keyword">div</span>[@class=<span class="string">'button'</span> <span class="keyword">and</span> <span class="keyword">text</span>()=<span class="string">'Save'</span>]</span><br></pre></td></tr></table></figure><br><strong>最好的选择是增加一个唯一且具备层次化特征的ID</strong>，这使得每个组件通过在其子组件前加上自己的ID。各个按钮的ID如下：<br><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">save</span>-button</span><br><span class="line">contact-<span class="keyword">form</span>.<span class="keyword">edit</span>-button</span><br></pre></td></tr></table></figure><br>考虑另一个例子。<strong>让我们为Angular中重复出现的UI元素设置ID</strong>，使用ng-repeat就可以搞定。设置一个index可以用于区分不同的元素：<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;tr <span class="attribute">id</span>=<span class="string">"feedback-&#123;&#123;<span class="variable">$index</span>&#125;&#125;"</span> <span class="attribute">class</span>=<span class="string">"feedback"</span> <span class="attribute">ng-repeat</span>=<span class="string">"feedback in ctrl.feedbacks"</span> &gt;</span><br></pre></td></tr></table></figure><br><strong>简单来说：ID设置是简单的，且会给测试带来巨大改变</strong>。请尽快把ID加上。</p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2014/08/testing-on-toilet-web-testing-made.html" target="_blank" rel="noopener">https://testing.googleblog.com/2014/08/testing-on-toilet-web-testing-made.html</a></p>
 
     </div>
 
@@ -316,6 +317,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#翻译自"><span class="nav-number">1.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
