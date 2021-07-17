@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我一来这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
+  <meta name="description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
 <meta property="og:type" content="article">
 <meta property="og:title" content="使用RpcReplay来做服务的Fake实现">
 <meta property="og:url" content="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我一来这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
+<meta property="og:description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png">
@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png">
 <meta property="article:published_time" content="2021-06-10T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-16T11:14:18.548Z">
+<meta property="article:modified_time" content="2021-07-17T10:30:16.859Z">
 <meta property="article:author" content="coderfengyun">
 <meta property="article:tag" content="自动化测试">
 <meta property="article:tag" content="ToTT">
@@ -200,7 +200,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-07-16 19:14:18" itemprop="dateModified" datetime="2021-07-16T19:14:18+08:00">2021-07-16</time>
+                <time title="Modified: 2021-07-17 18:30:16" itemprop="dateModified" datetime="2021-07-17T18:30:16+08:00">2021-07-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,7 +231,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="测试者的窘境"><a href="#测试者的窘境" class="headerlink" title="测试者的窘境"></a>测试者的窘境</h1><p><img src="/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png" alt="测试者的窘境"><br>我想让我的测试跑的飞快! 但是不行，我一来这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：     </p>
+        <h1 id="测试者的窘境"><a href="#测试者的窘境" class="headerlink" title="测试者的窘境"></a>测试者的窘境</h1><p><img src="/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png" alt="测试者的窘境"><br>我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：     </p>
 <ul>
 <li>需要一直维护这些Test Double实现</li>
 <li>当Test Double的实现与真实实现不一致时，非常容易出Bug<blockquote>
