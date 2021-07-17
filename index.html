@@ -1032,7 +1032,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-07-17 19:12:04" itemprop="dateModified" datetime="2021-07-17T19:12:04+08:00">2021-07-17</time>
+                <time title="Modified: 2021-07-17 19:22:58" itemprop="dateModified" datetime="2021-07-17T19:22:58+08:00">2021-07-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1072,7 +1072,7 @@
 </li>
 </ul>
 <h1 id="RpcReplay："><a href="#RpcReplay：" class="headerlink" title="RpcReplay："></a>RpcReplay：</h1><p>将真实实现的入参及出参记录为日志。<br><img src="/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png" alt="录制真实服务的日志"></p>
-<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>注意:当你修改了对待测系统的调用参数时,然后待测系统修改了对其他服务的调用参数时,你需要及时更新你的RPC logs。这是唯一的要求。除了会影响请<br>求参数的修改，其他任何时候，都可以对着RPC Log版本的测试用例做提交测试。这类测试是飞快的，因为你不需要真的启动18/32个服务。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
+<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>注意:当你修改了对待测系统的调用参数时,然后待测系统修改了对其他服务的调用参数时,你需要及时更新你的RPC logs。这是唯一的要求。除了会影响请<br>求参数的修改，其他任何时候，都可以对着RPC Log版本的测试用例做提交测试。这类测试是飞快的，因为你不需要真的启动18/32个服务。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/light-version-of-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
 <h2 id="这会不会比较危险？"><a href="#这会不会比较危险？" class="headerlink" title="这会不会比较危险？"></a>这会不会比较危险？</h2><p>Q: 如果真实服务修改了TA的实现怎么办？在这种情况下我们会不是是在对着一个过时的log做测试？<br>A: 如果一个服务修改了接口，这个修改会导致线上故障。举个例子我们依赖服务上线了Version2,但现在我们的测试用例还是对着version1的逻辑写的.因为这逻辑是录制来的，我们现在还在(测试中)使用Version1的逻辑。     </p>
 <p><strong>关键点在于：如果一个服务上线了break了对其他服务承诺的修改，这样的修改会产生线上故障</strong>，所以如果该服务在明天要上线version2，这个修改break了你的服务请求路径，你写的关于你的服务的任何测试都没办法阻止对方做类似的上线。他们可以立刻上线，这会导致所有使用version1协议的其他服务出现故障。在这一点上，你必须要依赖其他团队，因为完备的测试自己的API并在上线前提供一个前移窗口，是他们的责任。当他们把服务升级到version2时,有两个可能：</p>
 <ol>
