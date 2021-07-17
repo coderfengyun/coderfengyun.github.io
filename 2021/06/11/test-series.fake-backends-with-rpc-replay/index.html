@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
+  <meta name="description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者我们团队认为我们找到了一个折中的方式来解决这">
 <meta property="og:type" content="article">
 <meta property="og:title" content="使用RpcReplay来做服务的Fake实现">
 <meta property="og:url" content="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者    RpcReplay：将真实实现的入参">
+<meta property="og:description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者我们团队认为我们找到了一个折中的方式来解决这">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png">
@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png">
 <meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png">
 <meta property="article:published_time" content="2021-06-10T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-17T10:30:16.859Z">
+<meta property="article:modified_time" content="2021-07-17T11:12:04.117Z">
 <meta property="article:author" content="coderfengyun">
 <meta property="article:tag" content="自动化测试">
 <meta property="article:tag" content="ToTT">
@@ -200,7 +200,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-07-17 18:30:16" itemprop="dateModified" datetime="2021-07-17T18:30:16+08:00">2021-07-17</time>
+                <time title="Modified: 2021-07-17 19:12:04" itemprop="dateModified" datetime="2021-07-17T19:12:04+08:00">2021-07-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -235,19 +235,24 @@
 <ul>
 <li>需要一直维护这些Test Double实现</li>
 <li>当Test Double的实现与真实实现不一致时，非常容易出Bug<blockquote>
-<p>如果我能有个又快又健壮的Test Double实现就好了。 —测试者</p>
+<p>如果我能有个又快又健壮的Test Double实现就好了。 —测试者<br>我们团队认为我们找到了一个折中的方式来解决这个问题. 这需要一个接下来会详细介绍的工。但总体来说，我们做的是将这样的测试分成两种模式。第一个模式是对着真实的服务测试，我们将我们自己的服务启动起来，其他依赖的服务也启动起来，然后执行测试，在执行这一类测试的过程中，我们把所有在测试中产生的与我们依赖的服务产生的RPC交互写进RPC LOG。这种方式使得我们可以跑一个轻量版本的测试用例。相对于启动这么多昂贵的服务，我们要做的是启动一个dumb实现。这个dumb实现所做的事就是从RPC日志中读取，并将之前录制的RPC应答重放。你验证的代码还是可以变化的，并且测试用例中的断言还在正常的保护你的待测系统。</p>
 </blockquote>
 </li>
 </ul>
 <h1 id="RpcReplay："><a href="#RpcReplay：" class="headerlink" title="RpcReplay："></a>RpcReplay：</h1><p>将真实实现的入参及出参记录为日志。<br><img src="/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png" alt="录制真实服务的日志"></p>
-<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
-<h2 id="这会不会比较危险？"><a href="#这会不会比较危险？" class="headerlink" title="这会不会比较危险？"></a>这会不会比较危险？</h2><p>Q: 如果真实服务修改了TA的实现怎么办？在这种情况下我们会不是是在对着一个过时的log做测试？<br>A: 如果一个服务修改了接口，这个修改会导致线上故障。      </p>
-<h2 id="良性升级服务的响应"><a href="#良性升级服务的响应" class="headerlink" title="良性升级服务的响应"></a>良性升级服务的响应</h2><p>服务修改了实现，但不会修改接口，那么这个修改是良性的。<br>我们会跑一个后台job不断的更新日志。这个方式会使得你用的日志版Fake一直保持最新。    </p>
+<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>注意:当你修改了对待测系统的调用参数时,然后待测系统修改了对其他服务的调用参数时,你需要及时更新你的RPC logs。这是唯一的要求。除了会影响请<br>求参数的修改，其他任何时候，都可以对着RPC Log版本的测试用例做提交测试。这类测试是飞快的，因为你不需要真的启动18/32个服务。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backend-with-rpc-replay/light-version-with-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
+<h2 id="这会不会比较危险？"><a href="#这会不会比较危险？" class="headerlink" title="这会不会比较危险？"></a>这会不会比较危险？</h2><p>Q: 如果真实服务修改了TA的实现怎么办？在这种情况下我们会不是是在对着一个过时的log做测试？<br>A: 如果一个服务修改了接口，这个修改会导致线上故障。举个例子我们依赖服务上线了Version2,但现在我们的测试用例还是对着version1的逻辑写的.因为这逻辑是录制来的，我们现在还在(测试中)使用Version1的逻辑。     </p>
+<p><strong>关键点在于：如果一个服务上线了break了对其他服务承诺的修改，这样的修改会产生线上故障</strong>，所以如果该服务在明天要上线version2，这个修改break了你的服务请求路径，你写的关于你的服务的任何测试都没办法阻止对方做类似的上线。他们可以立刻上线，这会导致所有使用version1协议的其他服务出现故障。在这一点上，你必须要依赖其他团队，因为完备的测试自己的API并在上线前提供一个前移窗口，是他们的责任。当他们把服务升级到version2时,有两个可能：</p>
+<ol>
+<li>这次升级导致了线上故障：这不是你的测试用例需要保护的场景，这是他们的测试用例需要保护的场景。</li>
+<li>另一个可能就是下面要讲的良性修改。</li>
+</ol>
+<h2 id="良性升级服务的响应"><a href="#良性升级服务的响应" class="headerlink" title="良性升级服务的响应"></a>良性升级服务的响应</h2><p>服务修改了实现，但不会修改接口，那么这个修改是良性的。比如说他们修改了数据格式,但对于RPC的返回格式依然保持不变,或是增加了新的元数据(不会影响你的请求).<br>我们会跑一个后台job不断的更新日志。这个方式会使得你用的日志版Fake一直保持最新。    </p>
 <h2 id="请求的每次执行结果会不一样吗？"><a href="#请求的每次执行结果会不一样吗？" class="headerlink" title="请求的每次执行结果会不一样吗？"></a>请求的每次执行结果会不一样吗？</h2><p>十分不幸，是会不一样的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/request-diff-between-runs.png" alt="SUT每次发出的请求不一样"></p>
 <blockquote>
 <p>只要可能就移除非确定性的行为。确定性行为容易理解，重现，debug。</p>
 </blockquote>
-<p>有些信息确实会不一样，比如请求中带了时间戳，IP地址等。对于这些非确定性的字段，就需要在录制是过滤掉这些非确定性字段，而在重放时再单独设置。<br><img src="/images/test-series.fake-backends-with-rpc-replay/remove-nondeterministic-rpc-fields.png" alt="录制时去掉非确定性信息"><br><img src="/images/test-series.fake-backends-with-rpc-replay/add-nondeterministic-rpc-fields.png" alt="重放时增加非确定性信息"></p>
+<p>有些信息确实会不一样，比如请求中带了时间戳,id，IP地址等。对于这些非确定性的字段，就需要在录制是过滤掉这些非确定性字段，而在重放时再单独设置。<br><img src="/images/test-series.fake-backends-with-rpc-replay/remove-nondeterministic-rpc-fields.png" alt="录制时去掉非确定性信息"><br><img src="/images/test-series.fake-backends-with-rpc-replay/add-nondeterministic-rpc-fields.png" alt="重放时增加非确定性信息"></p>
 <h2 id="额外的好处"><a href="#额外的好处" class="headerlink" title="额外的好处"></a>额外的好处</h2><p>一个服务挂了，不会影响你的测试。因为你的提交测试(pre-commit test)不依赖于真实的服务，而是依赖于日志版Fake的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png" alt="服务挂了不影响测试"></p>
 <p>如下两张图对比了没有/有RpcReplay时的测试稳定性数据：<br><img src="/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png" alt="没有/有RpcReplay时的用例稳定性对比"><br>而且执行速度比之前提高了50%！     </p>
 <h1 id="文章翻译自"><a href="#文章翻译自" class="headerlink" title="文章翻译自"></a>文章翻译自</h1><p>GTAC 2015，<a href="https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0" target="_blank" rel="noopener">https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0</a></p>
