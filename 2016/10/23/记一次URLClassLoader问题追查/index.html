@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="场景描述：问题的发生来源一个工作中的问题，简要描述是在一个多module的maven project中，job module依赖server module完成工作，在intelliJ中执行良好，但是用maven package打包的时候，就会报找不到server module中对应的类。 于是乎，楼主开始了问题的排查。 怀疑是maven的锅 首先，怀疑是本地maven问题，尝试了各种解决办法，如m">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查">
+<meta property="og:url" content="http://coderfengyun.github.io/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="场景描述：问题的发生来源一个工作中的问题，简要描述是在一个多module的maven project中，job module依赖server module完成工作，在intelliJ中执行良好，但是用maven package打包的时候，就会报找不到server module中对应的类。 于是乎，楼主开始了问题的排查。 怀疑是maven的锅 首先，怀疑是本地maven问题，尝试了各种解决办法，如m">
+<meta property="article:published_time" content="2016-10-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.305Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="SpringBoot">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2016/10/23/%E8%AE%B0%E4%B8%80%E6%AC%A1URLClassLoader%E9%97%AE%E9%A2%98%E8%BF%BD%E6%9F%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring-Boot 1.4.0-RELEASE略显不负责任的版本----UrlClassLoader问题追查
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-10-23 00:00:00" itemprop="dateCreated datePublished" datetime="2016-10-23T00:00:00+08:00">2016-10-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A1%86%E6%9E%B6/" itemprop="url" rel="index"><span itemprop="name">技术框架</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>场景描述：问题的发生来源一个工作中的问题，简要描述是在一个多module的maven project中，job module依赖server module完成工作，在intelliJ中执行良好，但是用maven package打包的时候，就会报找不到server module中对应的类。</p>
+<p>于是乎，楼主开始了问题的排查。</p>
+<p><strong>怀疑是maven的锅 </strong><br>首先，怀疑是本地maven问题，尝试了各种解决办法，如maven -U, 删除本地maven库中server module的相应版本等。</p>
+<p><strong>察觉到问题关节 </strong><br>一通忙碌之后，楼主注意到报错的细节，不是找不到jar包，也不是server module的某一个类找不到，而是无论引用server module中的哪个类，package的时候都会报找不到响应的类。于是开始怀疑是不是server module的jar包有什么与众不同。</p>
+<p><strong>对比问题jar与普通jar的不同之处 </strong><br>那么楼主便将server module的jar包unzip开，查看细节</p>
+<p><em>有问题jar的结构</em><br>其中问题jar的包名是com.admin.server<br>jar–<br>     --BOOT-INF<br>     --META-INF<br>     --org<br>        --springframework<br>           --*</p>
+<p><em>普通jar结构<br>普通jar的包名是com.admin.job<br>jar–<br>    --META-INF<br>    --com<br>       --admin<br>          --job<br>             \</em>.class</p>
+<p>从中楼主比较出了不同，问题jar的主目录下并没有自己包名(com.admin.server)的目录，而普通的可依赖jar则有，那么是谁会修改这个jar的目录结构呢？</p>
+<p><strong> spring-boot接锅</strong><br>我们仔细观察可以发现问题jar的主目录下多了一个BOOT-INF，于是把矛头指向了spring-boot，在观察一下server module的pom.xml，楼主感觉真実はいつも一つ (真相只有一个)</p>
+<p><code><br>   <build><br>        <finalName>${project.artifactId}</finalName><br>        <plugins><br>            <plugin><br>                <groupId>org.springframework.boot</groupId><br>                <artifactId>spring-boot-maven-plugin</artifactId><br>                <version>1.4.0-RELEASE</version><br>                <executions><br>                    <execution><br>                        <goals><br>                            <goal>repackage</goal><br>                        </goals><br>                    </execution><br>                </executions><br>            </plugin><br>       …<br></code></p>
+<p>从上述代码我们可以看出spring-boot做了个maven的plugin，在repackage时期的时候接手了打包过程。所以有理由怀疑这次问题是由于升级到了spring-boot 1.4.0-RELEASE引起的。</p>
+<p>经过简单的搜索，便找到了stack overflow上得解答以及spring-boot自己的文档说明，<a href="http://docs.spring.io/spring-boot/docs/current/maven-plugin/examples/repackage-classifier.html" target="_blank" rel="noopener">spring-boot文档</a></p>
+<p><strong> 然而intresting</strong><br>找到了问题后，稍一兴奋，便有一个问题萦绕在楼主心头，久久不能散去，classloader究竟是怎样在jar文件中查找类的呢？</p>
+<p>阅读了一会URLClassLoader的源码，感觉不得要领，于是开始了写测试用例调试URLClassLoader的过程。</p>
+<p>将上述问题jar作为全路径输入，查找其中的类名，debug走起</p>
+<p><code><br>   @Test<br>    public void test() throws MalformedURLException {<br>        String pathname = “/<FOLDER_PATH>/target/admin-server-exec.jar”;<br>        try {<br>            Class&lt;?&gt; aClass = new URLClassLoader(new URL[]{FileURL.makeURL(pathname)}, null)<br>                    .loadClass(“com.admin.server.web.controller.AdminController.class”);<br>        } catch (ClassNotFoundException e) {<br>            e.printStackTrace();<br>        }<br>    }<br></code></p>
+<p>不断跟踪深入，直到发现一处<br><code><br>esource getResource(String var1, boolean var2) {<br>            if(this.metaIndex != null &amp;&amp; !this.metaIndex.mayContain(var1)) {<br>                return null;<br>            } else {<br>                try {<br>                    this.ensureOpen();<br>                } catch (IOException var5) {<br>                    throw new InternalError(var5);<br>                }</p>
+<pre><code>JarEntry var3 = this.jar.getJarEntry(var1);
+</code></pre><p></code></p>
+<p>以及getJarEntry的实现：<br><code><br>public ZipEntry getEntry(String name) {<br>        if (name == null) {<br>            throw new NullPointerException(“name”);<br>        }<br>        long jzentry = 0;<br>        synchronized (this) {<br>            ensureOpen();<br>            jzentry = getEntry(jzfile, zc.getBytes(name), true);<br>            if (jzentry != 0) {<br>                ZipEntry ze = getZipEntry(name, jzentry);<br>                freeEntry(jzfile, jzentry);<br>                return ze;<br>            }<br>        }<br>        return null;<br>    }<br></code></p>
+<p>那么一切豁然开朗，从jar中查找一个类，最后的实现便是查找待寻找的名字是否在zip的相应位置，由此可见，被spring-boot重新打包之后的jar中找不到相应的类非常合理。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/03/19/Spring-Boot%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="prev" title="SpringBoot哲学">
+      <i class="fa fa-chevron-left"></i> SpringBoot哲学
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/12/28/%E4%B8%80%E8%87%B4%E6%80%A7%E7%B3%BB%E5%88%97%E6%A6%82%E8%BF%B0/" rel="next" title="一致性系列概述">
+      一致性系列概述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '111f8e6c8242845eada594a26ef42446',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

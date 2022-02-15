@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Leonard Richardson的模型将REST的基本元素分解到三个步骤当中。这三个步骤包括：资源（resources），http谓词（get, post, put, delete, head, option），超链接控制。 注：文章译自Martin Fowler博客,原文链接.最近我（Martin Fowler）阅读了一本《Rest In Praces》，我的同事们写的一本书。他们的目的是解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Richard成熟度模型">
+<meta property="og:url" content="http://coderfengyun.github.io/2015/06/18/Richard%E6%88%90%E7%86%9F%E5%BA%A6%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Leonard Richardson的模型将REST的基本元素分解到三个步骤当中。这三个步骤包括：资源（resources），http谓词（get, post, put, delete, head, option），超链接控制。 注：文章译自Martin Fowler博客,原文链接.最近我（Martin Fowler）阅读了一本《Rest In Praces》，我的同事们写的一本书。他们的目的是解">
+<meta property="og:image" content="http://coderfengyun.github.io/images/1-layer-of-rest.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/2-interactive-of-layer0.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/3-layer1-add-resources.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/4-leve2-add-verbs.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/5-leve3-add-hypertext.png">
+<meta property="article:published_time" content="2015-06-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.302Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="REST">
+<meta property="article:tag" content="架构设计">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/1-layer-of-rest.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2015/06/18/Richard%E6%88%90%E7%86%9F%E5%BA%A6%E6%A8%A1%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Richard成熟度模型 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2015/06/18/Richard%E6%88%90%E7%86%9F%E5%BA%A6%E6%A8%A1%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Richard成熟度模型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-06-18 00:00:00" itemprop="dateCreated datePublished" datetime="2015-06-18T00:00:00+08:00">2015-06-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">架构设计</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Leonard Richardson的模型将REST的基本元素分解到三个步骤当中。这三个步骤包括：资源（resources），http谓词（get, post, put, delete, head, option），超链接控制。</p>
+<p>注：文章译自Martin Fowler博客,<a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="noopener">原文链接</a>.<br>最近我（Martin Fowler）阅读了一本《Rest In Praces》，我的同事们写的一本书。他们的目的是解释如何使用Rest Web Service来解决企业级应用于道的集成难题。这本书的核心来自于一个观察，即当前的互联网（Web）就是一个大规模的分布式系统，并且它运行良好，所以我们可以借鉴互联网（Web）的组织方式来构建我们的集成系统。<br><img src="/images/1-layer-of-rest.png" alt="Figure 1: REST的层次"></p>
+<p>为了更好的解释类互联网（web-style）系统的详细属性，（Rest In Practise）作者们使用了restfult成熟度模型（注：这一模型由Leonard Richardson发现，并在QCon上提出）。该模型采用了很好的方式来思考如何使用Web相关的技术。所以我（Martin Fowler）会以自己的方式来解释一下Rest成熟度模型（下面的例子只是用作说明，不值得拿去编码测试）。</p>
+<p>#<strong><em> Level 0 </em></strong></p>
+<p>起点是将HTTP作为远程交互的传输协议，而不使用Web相关的机制。实际上，这种方式只是讲HTTP座位一个通讯管道，而其中包含的是自定义的远程交互机制，通常是基于Remote Procedure Invocation。<br><img src="/images/2-interactive-of-layer0.png" alt="Figure 2: 使用Level 0的交互样例"></p>
+<p>假设我要预约一下我的医生。我的预约软件首先需要知道，我的医生在特定日期哪个时段是可约的，所以它像医院的预约系统发送请求，以查看该信息。在Level 0的场景下，医院会在某个url上开放一个服务接入点（service endpoint）。我会向该接入点发送一个包含了我详细请求的文档。<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">POST /appointmentService HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line">&lt;openSlotRequest date = <span class="string">"2015-06-16"</span> <span class="attribute">doctor</span>=<span class="string">"mjones"</span>&gt;</span><br></pre></td></tr></table></figure><br>医院的服务器则会给我返回如下信息：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">openSlotList</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">slot</span> <span class="attr">start</span> = <span class="string">"14:00"</span>, <span class="attr">end</span> = <span class="string">"14:50"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">doctor</span> <span class="attr">id</span> = <span class="string">"mjones"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">slot</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">slot</span> <span class="attr">start</span> = <span class="string">"16:00"</span>, <span class="attr">end</span> = <span class="string">"16:50"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">doctor</span> <span class="attr">id</span> = <span class="string">"mjones"</span>/&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">slot</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">openSlotList</span>&gt;</span></span><br></pre></td></tr></table></figure><br>我使用了XML座位例子，但这个内容可以是任何形式：JSON，YAML，key－Value Pairs，或是其他的自定义格式。<br>下面，我需要预约一个时段，同样的我可以想服务接入点发送一个请求。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">POST /appointmentService HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">appointmentRequest</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">slot</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">patient</span> <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">appointmentRequest</span>&gt;</span></span><br></pre></td></tr></table></figure><br>如果一切顺利，我将会得到反馈说我的预约成功了。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">appointment</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">slot</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">patient</span> <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">appointment</span>&gt;</span></span><br></pre></td></tr></table></figure><br>如果遇到了问题，例如另一个人在我之前预约了，我将得到一个错误反馈。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">appointmentRequestFailure</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">slot</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span>=<span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span>/&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">patient</span> <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">reason</span>&gt;</span>Slot not available<span class="tag">&lt;/<span class="name">reason</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">appointmentRequestFailure</span>&gt;</span></span><br></pre></td></tr></table></figure><br>到现在为止，仍是一个直观的RPC类系统。它只是在把XML发送与返回。如果你使用SOAP或者XML－RPC，基本与此类似，唯一的区别就是把你的XML信息包装在了一个“信封”中。</p>
+<p>#<strong><em> Level 1 - Resources </em></strong></p>
+<p>走向REST的在RMM中巅峰的第一步是引入资源（resources）。那么，现在与其将所有的请求都发往一个单独的服务接入点，我们现在可以想独立的资源发送请求了。<br><img src="/images/3-layer1-add-resources.png" alt="Figure 3: Level1 增加了资源（resource）"><br>那么对于我们的第一个请求，可能有一个资源代表指定的医生。<br><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">POST</span> /doctors/mjones HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line"><span class="section">&lt;openSlotRequest date = "2015-06-16"&gt;</span></span><br></pre></td></tr></table></figure><br>响应携带类似的基本信息，但是每个slot都是一个可以被单独请求。<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;openSlotList&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span>&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"5678"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"16:00"</span> <span class="attr">end</span> = <span class="string">"16:50"</span>&gt;</span><br><span class="line">&lt;openSlotList/&gt;</span><br></pre></td></tr></table></figure><br>有了对应的资源之后，预约一个时段意味着向对应的slot发送请求。<br><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">POST</span> /slots/1234 HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line"><span class="section">&lt;appointmentRequest&gt;</span></span><br><span class="line">	<span class="section">&lt;patient id = "jsmith" /&gt;</span></span><br><span class="line"><span class="section">&lt;/appointmentRequest&gt;</span></span><br></pre></td></tr></table></figure><br>如果一起顺利，会得到一个类似下述的响应。<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;appointment&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span> /&gt;</span><br><span class="line">	&lt;patient <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span><br><span class="line">&lt;/appointment&gt;</span><br></pre></td></tr></table></figure><br>与Level0的差别是，如果有谁想对appointment做些什么，像预定一些化验，他们需要先拿到相应的appointment资源，该资源可能有个URI，像<a href="http://roylhope.nhs.uk/slots/1234/appointment，并对此URL发送请求。" target="_blank" rel="noopener">http://roylhope.nhs.uk/slots/1234/appointment，并对此URL发送请求。</a></p>
+<p>对于像我这样的面相对象的人来说，资源特别像是对象的唯一标示符。相比于调用一个方法并传递（所有信息）参数，我们调用一个指定对象上的方法并提供其他相关的参数。</p>
+<p>#<strong><em> Level 2 － HTTP Verbs </em></strong><br>在上述（Level0 和 Level1）的所有请求中，我都适用了HTTP的POST谓词，但是一些人会使用GET取而代之。在这些层面上（Level0和Level）并不会产生什么不同，他们都用来作为你在HTTP上传输交互信息的管道。Level2 比此更进了一步，使用HTTP的谓词来表征将会对响应的资源（resource）产生怎样的操作。<br><img src="/images/4-leve2-add-verbs.png" alt="Figure 4 Level 2 增加HTTP谓词语义"><br>对于我们想获得医生的空闲时段，意味着我们需要使用GET。<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/doctors/mjones/slots?date=20150616&amp;status=open</span> HTTP/1.1</span><br><span class="line"><span class="attribute">Host</span>: royalhope.nhs.uk</span><br></pre></td></tr></table></figure><br>得到的响应和使用POST一致。<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;openSlotList&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span>&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"5678"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"16:00"</span> <span class="attr">end</span> = <span class="string">"16:50"</span>&gt;</span><br><span class="line">&lt;openSlotList/&gt;</span><br></pre></td></tr></table></figure><br>在Level2中，对于GET的使用是个关键。HTTP定义GET是一个安全操作，也就是说它不会对任何事物的状态引起任何特别的影响。这允许我们安全的任意次数的以任意顺序的执行GET，并得到相同的结果。一个重要的结果的是，它允许请求链路上的任何一个参与者使用缓存，而缓存恰恰是web性能的重要优化方式。HTTP包含多种方式支持缓存，这些可以被通讯中的所有参与者所使用。通过遵从HTTP的原则，我们能够利用它提供的能力。</p>
+<p>为了预约一个时段，我们需要一个HTTP位次来改变（响应资源）状态，一个POST或是一个PUT。我会像之前一样使用POST。<br><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">POST</span> /slots/1234 HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line"><span class="section">&lt;appointmentRequest&gt;</span></span><br><span class="line">	<span class="section">&lt;patient id = "jsmith" /&gt;</span></span><br><span class="line"><span class="section">&lt;/appointmentRequest&gt;</span></span><br></pre></td></tr></table></figure><br>POST和PUT之间的取舍超出了本文的范围，可能需要一篇新的文章来说明这个问题。但是我想指出一些人错误的映射了POST／PUT和CREATE／UPDATE之间的对应关系。他们之间的选择则是与这种映射关系更为不同。</p>
+<p>尽管如果我使用了与Lelvel 1一样的POST请求，然而服务端的反馈则会有明显的不同。如果一切顺利，服务会返回一个带有201状态码的响应，201代表这有一个新的资源产生了。<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">201</span> Created</span><br><span class="line">Location: slots/<span class="number">1234</span>/appointment</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;appointment&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span> /&gt;</span><br><span class="line">	&lt;patient <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span><br><span class="line">&lt;/appointment&gt;</span><br></pre></td></tr></table></figure><br>201状态码表示了一个location参数，并携带了一个URI，该URI可以被客户端使用GET来查看资源状态。响应中也包含了新增资源的描述，可以引导客户端发送一个附加的请求。</p>
+<p>当发生错误时还会产生另一种不同，例如某人已经预定了该时段。<br><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">409</span> <span class="keyword">Conflict</span></span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;openSlotList&gt;</span><br><span class="line">	&lt;slot id = "5678" doctor = "mjones" start = "16:00" end = "16:50" /&gt;</span><br><span class="line">&lt;openSLotList&gt;</span><br></pre></td></tr></table></figure><br>这次响应中重要的部分是使用HTTP的状态码来表征发生了错误。在这种情况下，用409来表示其他人已经更新了该资源看起来是一个比较合适的选择。相比于返回一个状态码是200，但是内容中包含了错误信息，在Level 2中，我们显示的使用这种方式来表达错误的响应。具体使用什么状态码来表征什么反馈是协议设计者的事情，但是至少应该要采用一个非2XX的状态码来表征错误。Level 2 引入了HTTP的谓词和状态码。</p>
+<p>这里有一个不一致的地方。REST建议使用所有的HTTP谓词。他们也在证实他们的方式是借鉴自Web系统的成功实践。但是万维网不怎么使用PUT和DELETE。有很多的理由来使用PUT和DELETE，但Web的经验并不是其中之一。</p>
+<p>当前的Web最为重要的元素是强烈的区分开安全操作（GET）和非安全操作（POST），并且使用状态码来标示是否产生了错误。</p>
+<p>#<strong><em> Level 3－Hypermedia Controls </em></strong><br>最后一个层次引入了大家耳熟能详的拥有丑陋缩写的HATEOAS(Hypertext As The Engine Of Application State)。它将问题从如何获取“空闲时段列表”转换成了要做什么才能预定到一个时段（抽象啊）。<br><img src="/images/5-leve3-add-hypertext.png" alt="Figure 5 ： Level 3 增加了超链接控制"><br>我们从最开始的GET请求入手，和在Level 2中发送的请求一样。<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/doctors/mjones/slots?date=20150616&amp;status=open</span> HTTP/1.1</span><br><span class="line"><span class="attribute">Host</span>: royalhope.nhs.uk</span><br></pre></td></tr></table></figure><br>但是响应中有一个新的元素：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line">&lt;openSlotList&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span>&gt;</span><br><span class="line">		&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/slot/book"</span> <span class="attr">uri</span> = <span class="string">"/slots/1234"</span> /&gt;</span><br><span class="line">	&lt;/slot&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"5678"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"16:00"</span> <span class="attr">end</span> = <span class="string">"16:50"</span>&gt;</span><br><span class="line">		&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/slot/book"</span> <span class="attr">uri</span> = <span class="string">"/slots/1234"</span> /&gt;</span><br><span class="line">	&lt;/slot&gt;</span><br><span class="line">&lt;openSlotList/&gt;</span><br></pre></td></tr></table></figure><br>每个slot中包含了一个link元素（包含个URI），用以表明可以怎样去预定一次预约。<br>超链接控制的关键点在于告诉我们下一步要做什么，以及下一步操作所需资源的URI。相对于要我们自己去了解要向哪里发送预约请求，超链接控制则是告诉我们怎么去做。</p>
+<p>这个POST请求根Level 2中的一样。<br><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">POST</span> /slots/1234 HTTP/1.1</span><br><span class="line">[various other headers]</span><br><span class="line"></span><br><span class="line"><span class="section">&lt;appointmentRequest&gt;</span></span><br><span class="line">	<span class="section">&lt;patient id = "jsmith" /&gt;</span></span><br><span class="line"><span class="section">&lt;/appointmentRequest&gt;</span></span><br></pre></td></tr></table></figure><br>而响应中则包含了一系列的超链接控制来表征下一步可以做的多个行为。<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">HTTP/<span class="number">1.1</span> <span class="number">201</span> Created</span><br><span class="line">Location: slots/<span class="number">1234</span>/appointment</span><br><span class="line">[various headers]</span><br><span class="line"></span><br><span class="line">&lt;appointment&gt;</span><br><span class="line">	&lt;slot <span class="attr">id</span> = <span class="string">"1234"</span> <span class="attr">doctor</span> = <span class="string">"mjones"</span> <span class="attr">start</span> = <span class="string">"14:00"</span> <span class="attr">end</span> = <span class="string">"14:50"</span> /&gt;</span><br><span class="line">	&lt;patient <span class="attr">id</span> = <span class="string">"jsmith"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/appointment/cancel"</span> <span class="attr">uri</span> = <span class="string">"/slots/1234/appointment"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/appointment/addTest"</span> <span class="attr">uri</span> = <span class="string">"/slots/1234/appointment/tests"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"self"</span> <span class="attr">uri</span> = <span class="string">"/slots/1234/appointment"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/appointment/changeTime"</span> <span class="attr">uri</span> = <span class="string">"/doctors/mjones/slots?date=20150616&amp;status=open"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/appointment/updateContactInfo"</span> <span class="attr">uri</span> = <span class="string">"/patients/jsmith/contactInfo"</span> /&gt;</span><br><span class="line">	&lt;link <span class="attr">rel</span> = <span class="string">"/linkrels/help"</span> <span class="attr">uri</span> = <span class="string">"/help/appointment"</span> /&gt;</span><br><span class="line">&lt;/appointment&gt;</span><br></pre></td></tr></table></figure><br>超链接控制的一个显著好处是它允许服务端改变他自己的URI配置的同时不会对客户端引发影响。一旦用户寻找“addTest”的URI时，服务端可以隐藏掉所有其他的初始接入点。<br>一个附加的好处是允许客户端开发者了解整个协议。这些链接会给客户端开发者一个提示，“接下来你可能需要做什么”。他并不提供所有的信息，例如“latest”和“cancel”都指向相同的URI，他们需要明确一个是GET而另一个是DELETE。但是呐，这样至少给客户端开发人员一个出发点，让他们知道要去文档中找什么。<br>同样的，超链接控制允许服务端开发人员通过讲新的link加入响应的方式增加新功能。</p>
+<p>到目前为止们还没有完整的标准来指导大家应该如何表征超链接控制。我当前所做的则是按照《REST in Practise》中推荐的那样（而他是遵从ATOM，RFC 4287的）。我使用<link>元素，其中包含uri属性（其标示了目标URI）以及rel属性（其标示出了关系的类型）。一个通用的关系（例如self用来指向资源本身）是十分明显的，任何其他特定于该服务端的link都是一个合格的URI。ATOM表明熟知的linkrels是<a href="http://www.iana.org/assignments/link-relations/link-relations.xhtml" target="_blank" rel="noopener">Registry Of Link Relations</a>。我写的这些受到ATOM限制的，ATOM本身是在第三层restfulness的领导者。</p>
+<p>#<strong><em> 分层的意义 </em></strong><br>我应该强调的是，RMM，尽管它是一个思考REST相关元素的好方式，但并不是REST层次的定义本身。[Roy Fielding说明了3层RMM是REST的一个前置条件](<a href="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven]。像软件中的许多定义一样，REST有很多的定义，但是由于Roy" target="_blank" rel="noopener">http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven]。像软件中的许多定义一样，REST有很多的定义，但是由于Roy</a> Fielding发现了这一概念，他的定义应该比其他的更具权威性。<br>我发现，RMM提供了一个逐步递进的方式来帮助我们理解restful 这种想法背后的基本概念。因此，我把RMM视为一种帮助我们理解概念的工具而不是某种评价验证体系。我觉得使用Restful来集成系统的实际案例还不足以证实它是最好的。但是我确实认为它是一个吸引人的方案，并且在大多数情况下我会推荐这种方案。<br>与lan Robinson讨论，它强调RMM真正吸引人的地方在于它引入了普通的程序设计理念。</p>
+<pre><code>* Level 1，通过讲一个大的服务接入点打碎成为许多的资源，来降低问题的复杂性。此处运用了分治的思想。
+* Level 2，引入了一些列的标准谓词，所以我们可以用同样的方式来处理类似的问题。此处消除了不必要的变量。
+* Level 3，引入了发现能力，提供了一种方式让协议可以自解释。此处引入了自解释能力。
+</code></pre><p>本文译自Martin Fowler博客，<a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="noopener">原文链接</a>。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/REST/" rel="tag"># REST</a>
+              <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="tag"># 架构设计</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/06/01/Java%20Memory%20And%20GC%20Generation/" rel="prev" title="Java内存--GC分代">
+      <i class="fa fa-chevron-left"></i> Java内存--GC分代
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/" rel="next" title="在验证程序输入时使用Notification来替代Exception">
+      在验证程序输入时使用Notification来替代Exception <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '0f0f3c4131f35342f1dca63cf7b30c7a',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

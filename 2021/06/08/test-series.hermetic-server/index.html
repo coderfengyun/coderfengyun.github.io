@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="考虑一个复杂的web应用。实际上，其由一个服务器迷宫，每一个负责不同的任务，并且有这相互复杂的交互。每一个用户行为会游走“服务器迷宫”后返回给终端用户。我们应该怎么对这样应用写end-to-end测试用例呢？ End-To-End Test一个end-to-end测试在Google的测试宇宙中指代：验证了整个从请求到响应间的全部服务栈。下面是一个简化的SUT(System Under Test)的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hermetic Server">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/08/test-series.hermetic-server/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="考虑一个复杂的web应用。实际上，其由一个服务器迷宫，每一个负责不同的任务，并且有这相互复杂的交互。每一个用户行为会游走“服务器迷宫”后返回给终端用户。我们应该怎么对这样应用写end-to-end测试用例呢？ End-To-End Test一个end-to-end测试在Google的测试宇宙中指代：验证了整个从请求到响应间的全部服务栈。下面是一个简化的SUT(System Under Test)的">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.hermetic-server/1-SUT-Hermetic-Server.jpeg">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.hermetic-server/2-SUT-Hermetic-Server.jpeg">
+<meta property="article:published_time" content="2021-06-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.304Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/test-series.hermetic-server/1-SUT-Hermetic-Server.jpeg">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/08/test-series.hermetic-server/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Hermetic Server | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/08/test-series.hermetic-server/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hermetic Server
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-08 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-08T00:00:00+08:00">2021-06-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/TestDouble/" itemprop="url" rel="index"><span itemprop="name">TestDouble</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>考虑一个复杂的web应用。实际上，其由一个服务器迷宫，每一个负责不同的任务，并且有这相互复杂的交互。每一个用户行为会游走“服务器迷宫”后返回给终端用户。我们应该怎么对这样应用写end-to-end测试用例呢？</p>
+<h1 id="End-To-End-Test"><a href="#End-To-End-Test" class="headerlink" title="End-To-End Test"></a>End-To-End Test</h1><p>一个end-to-end测试在Google的测试宇宙中指代：验证了整个从请求到响应间的全部服务栈。下面是一个简化的SUT(System Under Test)的示例，用以说明一个end-to-end测试用例用来验证什么。注意SUT中的Frontend Server与一个第三方服务相连，但示例中的请求是不需要这部分信息的。</p>
+<p><img src="/images/test-series.hermetic-server/1-SUT-Hermetic-Server.jpeg" alt="SUT-1"></p>
+<p>对这么一个系统，要写一个又<strong>快</strong>又<strong>稳</strong>的end-to-end测试用例的一个挑战是避免网络访问。设计到网络访问的测试通常比只访问本地资源的测试要慢，并且访问远程服务也会因为不可决定性以及远程服务的不可用导致<strong>脆弱</strong>。</p>
+<h1 id="Hermetic-Server"><a href="#Hermetic-Server" class="headerlink" title="Hermetic Server"></a>Hermetic Server</h1><p>在Google设计end-to-end测试的一个技巧是<strong>Hermetic Servers</strong>。<br>什么是Hermetic Server呢？简单说就是”server in a box”。如果你可以将整个服务在一台无网络连接的机器上启动起来并保证其正常工作，那么你就拥有一个hermetic server了。广义的hermetic定义中只要是一套隔离的系统即可，本文是广义hermetic的一个特例。<br>为什么hermetic server是有用的呢？因为，如果你的整个SUT是由一系列的hermetic server组合而成的，那么该SUT就可以在一台机器上启动起来，直接测试；没有网络连接的必要！这个单机可以是一台物理机也可以是一台虚拟机。</p>
+<h1 id="设计Hermetic-Servers"><a href="#设计Hermetic-Servers" class="headerlink" title="设计Hermetic Servers"></a>设计Hermetic Servers</h1><p>构建hermetic server的过程，起始于一个新服务设计阶段的早期。有一下几点值得关注：</p>
+<ul>
+<li>所有指向其他服务的连接，都需要再运行时以一种DI的形式注入进去，比如命令行参数。</li>
+<li>所有静态文件都被打包进了该server的二进制包里。</li>
+<li>如果服务需要访问远程存储，保证该远程存储可以用数据文件或内存实现替换掉。</li>
+</ul>
+<p>满足上述需求，会使我们拥有一个高度可配置的服务，该服务也有潜力成为一个hermetic server。但广有这些特点还不够。我们需要如下完成如下几项，才能真的完成一个hermetic server：    </p>
+<ul>
+<li>保证那些我们的测试用例不会使用的连接点，都有相应的fake实现，以确保最终我们能验证“确实没有进行交互”。</li>
+<li>提供一些工具来帮助快速灌入测试数据。</li>
+<li>提供日志工具，在请求/响应经过SUT时，trace下这些 请求/相应。</li>
+</ul>
+<h1 id="在测试中使用Hermetic-Servers"><a href="#在测试中使用Hermetic-Servers" class="headerlink" title="在测试中使用Hermetic Servers"></a>在测试中使用Hermetic Servers</h1><p>让我们把上面展示过的SUT拿过来，并假设所有涉及的服务都是hermetic server。<br>下面是一个用户请求的end-to-end测试用例，画出来的样子：     </p>
+<p><img src="/images/test-series.hermetic-server/2-SUT-Hermetic-Server.jpeg" alt="SUT-2"></p>
+<p>该end-to-end测试做了如下几步：    </p>
+<ul>
+<li>在一个单机上启动图中所示的整个SUT    </li>
+<li>通过测试客户端想服务发送请求</li>
+<li>验证服务的响应<br>一个值得注意的点是图中指向mock server连接在这个测试中是是没有必要的。如果我们想要验证这个服务，那么我们也需要提供一个对应的hermetic server。<br>这个end-to-end测试更可靠，主因是TA没有使用网络连接。TA也更快，因为所有数据都在内存里或是本地磁盘里。我们可以在持续构建中跑这些而是用例，因此可以保证图中服务的任何一个发生变更时都可以执行该测试。如果测试失败了，日志模块会帮助找到问题发生在哪里。<br>我们在大量的end-to-end测试中使用了hermetic server。一些比较典型的例子如下：    </li>
+<li>启动测试，用以验证没有DI错误</li>
+<li>后端服务的API测试</li>
+<li>微缩benchmark性能测试</li>
+<li>前端的UI及API测试</li>
+</ul>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>Hermetic server也有他自己的弊端。他们会导致测试的执行时间变长，因为其需要在你执行end-to-end测试时把整个SUT都启动起来。如果你的测试限制了CPU和内存资源，那么可能由于服务间复杂交互的提升hermetic server可能会导致你最终超限。你可以在内存存储中使用的数据集大小也远小于在生产环境的存储中的大小。<br>Hermetic server是一种非常有意义的测试工具。像所有其他工具一样，TA也需要被斟酌着用在那些合适的地方。</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2012/10/hermetic-servers.html" target="_blank" rel="noopener">https://testing.googleblog.com/2012/10/hermetic-servers.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/07/test-series.how-to-define-good-test/" rel="prev" title="怎样才能称之为好的测试用例">
+      <i class="fa fa-chevron-left"></i> 怎样才能称之为好的测试用例
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/10/test-series.understanding-your-code-coverage-data/" rel="next" title="正确理解测试覆盖率数据">
+      正确理解测试覆盖率数据 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#End-To-End-Test"><span class="nav-number">1.</span> <span class="nav-text">End-To-End Test</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Hermetic-Server"><span class="nav-number">2.</span> <span class="nav-text">Hermetic Server</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#设计Hermetic-Servers"><span class="nav-number">3.</span> <span class="nav-text">设计Hermetic Servers</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#在测试中使用Hermetic-Servers"><span class="nav-number">4.</span> <span class="nav-text">在测试中使用Hermetic Servers</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结论"><span class="nav-number">5.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">6.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '0151477d1c23231de5ed2c4cd98a0fe7',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在生命中的某个节点，你可能会回想起一部你和朋友都曾想看又都后悔看过的电影。或者可能你记得那些“你的团队认为找到了杀手级功能，但只是在上线之后又归于沉寂”的时刻。      好的想法在实践中可能会失败，在测试的世界中，一个普遍的好但是经常在实践中失败的主意是基于end-to-end测试周围的测试策略。      测试人员投入时间写了大量的自动化测试，包括单元测试，集成测试，和end-to-end测试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="对更多的end-to-end测试Say No">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/17/test-series.just-say-no-to-more-e2e-tests/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="在生命中的某个节点，你可能会回想起一部你和朋友都曾想看又都后悔看过的电影。或者可能你记得那些“你的团队认为找到了杀手级功能，但只是在上线之后又归于沉寂”的时刻。      好的想法在实践中可能会失败，在测试的世界中，一个普遍的好但是经常在实践中失败的主意是基于end-to-end测试周围的测试策略。      测试人员投入时间写了大量的自动化测试，包括单元测试，集成测试，和end-to-end测试">
+<meta property="og:image" content="http://coderfengyun.github.io/images/just-say-no-to-more-e2e-tests/test-pyramid.png">
+<meta property="article:published_time" content="2021-06-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.304Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta property="article:tag" content="e2e">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/just-say-no-to-more-e2e-tests/test-pyramid.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/17/test-series.just-say-no-to-more-e2e-tests/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>对更多的end-to-end测试Say No | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/17/test-series.just-say-no-to-more-e2e-tests/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          对更多的end-to-end测试Say No
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-17 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-17T00:00:00+08:00">2021-06-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/e2e/" itemprop="url" rel="index"><span itemprop="name">e2e</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在生命中的某个节点，你可能会回想起一部你和朋友都曾想看又都后悔看过的电影。或者可能你记得那些“你的团队认为找到了杀手级功能，但只是在上线之后又归于沉寂”的时刻。     </p>
+<p>好的想法在实践中可能会失败，在测试的世界中，一个普遍的好但是经常在实践中失败的主意是基于end-to-end测试周围的测试策略。     </p>
+<p>测试人员投入时间写了大量的自动化测试，包括单元测试，集成测试，和end-to-end测试，但是该策略可能大部分都投入到了用end-to-end测试来整体验证一个产品。典型情况是，这些测试模拟了真实用户场景。     </p>
+<h1 id="理论上的End-to-End测试"><a href="#理论上的End-to-End测试" class="headerlink" title="理论上的End-to-End测试"></a>理论上的End-to-End测试</h1><p>虽然主要依赖于end-to-end测试是个坏点子，但却很容易说服一个理性人使其相信这个点子理论上是有意义的。     </p>
+<p>Google的<a href="https://www.google.com/about/company/philosophy/" target="_blank" rel="noopener">十件我们已知正确的事</a>的第一条是：”专注与用户，其他的一起以此为准”。因此，end-to-end测试专注于真实用户场景听起来是个好主意。而且，这个策略也有广泛的拥泵：      </p>
+<ul>
+<li>开发人员，喜欢它，因为这把测试工作的大部分转交给其他人负责了</li>
+<li>经理人与决策者，喜欢它，因为模拟真实用户场景的测试可以帮助他们简单的判断失败的测试对于用户来说意味着什么。</li>
+<li>测试人员，喜欢它，因为他们经常担心遗漏一个Bug或者时写了一个没有验证真实行为的测试用例；从用户视角写测试用例可以避免前面的问题，并且可以给测试人员一种满足感。</li>
+</ul>
+<h1 id="真实的End-to-End测试"><a href="#真实的End-to-End测试" class="headerlink" title="真实的End-to-End测试"></a>真实的End-to-End测试</h1><p>如果这个测试策略理论上听起来这么棒，那么在实践中怎么搞锉了的呢？为了讲清楚，我在下面展示了一个组合概述，该概述基于我或是其他测试人员的真实体验。在这个概述中，一个组织正在构建一个在线文档编辑的服务(比如，Google Docs)。<br>让我们假设这个团队已经有一些很酷的测试基础设施可用了。每个晚上：</p>
+<ol>
+<li>服务的最新版本都会被构建</li>
+<li>这个版本会被部署到团队的测试环境</li>
+<li>所有的end-to-end测试会在这个环境上执行</li>
+<li>一封总结了测试结果的邮件报告会被发给整个团队</li>
+</ol>
+<p>随着下一个发布日期的逐步接近，为了保证较高的产品质量标准，他们仍然要求在需求完成前要保证90%的end-to-end测试用例通过。现在，还有一天就到截止日期了：     </p>
+<table>
+<thead>
+<tr>
+<th>Days Left</th>
+<th>Pass%</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5%</td>
+<td>所有end-to-end测试用例都挂了！登录服务挂了。所有测试用例都需要登录，因此所有测试都挂了。</td>
+</tr>
+<tr>
+<td>0</td>
+<td>4%</td>
+<td>我们所依赖的兄弟团队，部署到测试环境一个低质量build</td>
+</tr>
+<tr>
+<td>-1</td>
+<td>54%</td>
+<td>一名研发昨天搞挂了测试场景保存。半数左右的测试用例会在执行中保存文档。研发同学花了很长时间用于排查是否是前端bug。</td>
+</tr>
+<tr>
+<td>-2</td>
+<td>54%</td>
+<td>确定了是个前端Bug，研发同学花了大半天的时间来排查问题的根因</td>
+</tr>
+<tr>
+<td>-3</td>
+<td>54%</td>
+<td>昨天一个错误的修复提交合进了仓库。错误挺容易就被定为了，因此，今天一个正确的修复提交被合进了仓库</td>
+</tr>
+<tr>
+<td>-4</td>
+<td>1%</td>
+<td>测试环境机房里发生了物理机故障</td>
+</tr>
+<tr>
+<td>-5</td>
+<td>84%</td>
+<td>大部分小Bug都是被几个主要Bug引起的(比如登录挂了，保存场景挂了)。还有些小问题仍在处理中</td>
+</tr>
+<tr>
+<td>-6</td>
+<td>87%</td>
+<td>应该能做到90%以上的，但是各种原因还是没做到</td>
+</tr>
+<tr>
+<td>-7</td>
+<td>89.54%</td>
+<td>很接近90%了。昨天没有新的修复合进代码库，所以昨天一定有些测试是因为自身脆弱导致没通过的</td>
+</tr>
+</tbody>
+</table>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>除了几个问题，测试还是不活了真正的bug的。</p>
+<h1 id="哪些是搞得比较好的"><a href="#哪些是搞得比较好的" class="headerlink" title="哪些是搞得比较好的"></a>哪些是搞得比较好的</h1><ul>
+<li>影响用户的Bug在被用户发现之前定位并解决了。</li>
+</ul>
+<h1 id="哪些是搞得还不够好的"><a href="#哪些是搞得还不够好的" class="headerlink" title="哪些是搞得还不够好的"></a>哪些是搞得还不够好的</h1><ul>
+<li>团队完成交付，整整延迟了一个礼拜(而且还加了很多班)</li>
+<li>查end-to-end测试用例失败的根因很痛苦也很消耗时间</li>
+<li>其他团队的失效以及机房失效有好几天都影响了测试结果</li>
+<li>许多小Bug藏在了更大的Bug后面（大坑套小坑）</li>
+<li>end-to-end测试有些时候还是比较脆弱的</li>
+<li>开发人员必须等到第二天才能搞明白一个修复是否真的有效</li>
+</ul>
+<p>所以，我们现在知道end-to-end这种测试策略的问题了，我们需要调整我们测试的方式来规避这些问题。但是怎么样才是正确的搞法呢？</p>
+<h1 id="测试真正的价值"><a href="#测试真正的价值" class="headerlink" title="测试真正的价值"></a>测试真正的价值</h1><p>通常来说，一旦发现未通过的测试用例，一个测试人员的工作就完成了。报告了一个bug，然后修复这个Bug就是开发的任务了。为了确认end-to-end测试策略到底哪里不靠谱，我们需要调出这个问题边界，从第一原则的角度来重新思考问题。如果我们“专注与用户(其他一起则随之而来)”，我们必须要问我们自己：一个失败的测试对用户的好处是什么。下面是对这个问题的回答。</p>
+<h1 id="一个失败的测试用例对于用户没有直接好处"><a href="#一个失败的测试用例对于用户没有直接好处" class="headerlink" title="一个失败的测试用例对于用户没有直接好处"></a>一个失败的测试用例对于用户没有直接好处</h1><p>尽管这句声明初看起来有些令人震惊，但这是真的。如果产品正常工作，一个测试用例能判断TA(指该产品)是否正常工作吗？如果产品出问题了，一个测试用例能判断TA(指该产品)是否出问题了吗？因此，如果一个失败的测试用例对于用户来说没什么意义，那么什么对用户来说有意义呢？</p>
+<h1 id="对于Bug的修复，是对用户有益的"><a href="#对于Bug的修复，是对用户有益的" class="headerlink" title="对于Bug的修复，是对用户有益的"></a>对于Bug的修复，是对用户有益的</h1><p>用户只对于Bug被修复感到开心。很明显，为了修复一个Bug，你必须要知道这Bug存在与哪里。为了知道Bug藏在哪，理想中你有一个测试用例来捕获这个Bug(因为如果测试用例不能捕获Bug，那么用户就会发现这些Bug)。但是在整个流程中，从测试用例失败到Bug修复，只有在最后一步(指Bug修复)才真的产生价值。</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Failing Test</th>
+<th>Bug Opened</th>
+<th>Bug Fixed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Value Added</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>因此，为了评估一个测试策略，不能只是评估它在发现Bug方面表现如何。也必须要评价在帮助研发修复(甚至是防范)Bug方面表现的怎么样。</p>
+<h1 id="简历正确的反馈回路"><a href="#简历正确的反馈回路" class="headerlink" title="简历正确的反馈回路"></a>简历正确的反馈回路</h1><p>测试创建了一个反馈回路，可以通知开发产品是否正常工作。理想的反馈回路有多个属性：</p>
+<ul>
+<li>Fast。没有开发人员想要浪费数小时甚至数天来判断是否变更正常工作。有些时候变更不工作，没有人是完美的，并且反馈循环需要多次执行(改-测-改-测)。一个快速的反馈循环，是的修复Bug更快。如果循环足够快，开发人员就可以在讲变更检入之前就执行测试。</li>
+<li>Reliable。没有开发人员想要花费数小时的时间来调试一个测试用例，结果只是发现这测试用例就是比较脆弱。脆弱的测试用例减弱了开发人员对于测试的新人，并且脆弱测试用例也经常会被忽略，即使是TA们真的发现了产品问题。</li>
+<li>Isolates failures。为了修复Bug，开发需要找到引起Bug的具体代码位置。当一个产品包含数百万行代码时，且Bug可能在任何地方，好似大海捞针。</li>
+</ul>
+<h1 id="小处着眼，而不是大处着眼"><a href="#小处着眼，而不是大处着眼" class="headerlink" title="小处着眼，而不是大处着眼"></a>小处着眼，而不是大处着眼</h1><p>那么，我们怎么才能创建理想的反馈回路呢？通过向更小处着眼，而不是更大。</p>
+<h1 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h1><p>单元测试只测产品的一小部分，并且将该部分隔离之后测试。单元测试比较接近于理想的反馈回路：</p>
+<ul>
+<li>单元测试 Fast。我们只需要构建一个小单元来测试，且测试用例也趋向于非常小。事实上，1/10秒的执行时间，对于单元测试来说是比较慢的。</li>
+<li>单元测试 Reliable。简单的系统和小单元总体上更不容易产生脆弱性。进而，单元测试的最佳实践，特别是与hermetic测试相关的实践，可以彻底移除脆弱性。</li>
+<li>单元测试Isolates Failures。即使产品包含100W行代码，如果一个单元测试没通过，你也只需在单元测试覆盖的小单元中搜寻Bug。</li>
+</ul>
+<p>书写高效的单元测试需要在如下领域磨炼出技巧：比如，依赖管理，mocking以及hermetic测试。在这我不会覆盖这些这些技巧，但是作为一个样例，可以参考提供给新Google员工阅读的<a href="https://github.com/google/guava/blob/master/guava/src/com/google/common/base/Stopwatch.java" target="_blank" rel="noopener">How Google builds</a>以及<a href="https://github.com/google/guava/blob/master/guava-tests/test/com/google/common/base/StopwatchTest.java" target="_blank" rel="noopener">测试一个计时器</a>。     </p>
+<h1 id="单元测试与end-to-end测试的对比"><a href="#单元测试与end-to-end测试的对比" class="headerlink" title="单元测试与end-to-end测试的对比"></a>单元测试与end-to-end测试的对比</h1><p>对于单元测试，你必须要等：首先等整个产品构建出来，然后等TA部署完毕，最后才能执行end-to-end测试。当测试用例执行时，脆弱性如影随形。即使一个测试用例发现了Bug，Bug也可能在产品的任何地方。<br>尽管end-to-end测试在模拟真实用户场景方面表现良好，但这个有点将很快被end-to-end反馈回路上的劣势冲淡。     </p>
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>Unit</th>
+<th>End-to-End</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fast</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Reliable</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Isolates Failures</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>模拟真实用户</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<h1 id="集成测试"><a href="#集成测试" class="headerlink" title="集成测试"></a>集成测试</h1><p>单元测试确实有个巨大的缺点：即使每个单元都工作完好，你也不能确定他们在一起工作时是什么状态。但即使这样，你也不需要end-to-end测试。对于这种情况，可以使用一个集成测试。一个集成测试将几个单元组合起来，通常是两个单元，测试他们一起工作时的表现，以验证他们在一起工作时没问题。<br>如果两个单元之间的集成除了问题，且你能够写一个更小规模/更专注的集成测试来发现该问题，为什么要写一个end-to-end测试呢？如果你确实需要考虑的更广泛一点，那么你只需要“扩大一点点”来验证这些单元一起工作良好。     </p>
+<h1 id="测试金字塔"><a href="#测试金字塔" class="headerlink" title="测试金字塔"></a>测试金字塔</h1><p>尽管有了单元测试和集成测试之后，你还是希望有少量的end-to-end测试来验证整个系统。为了在三种测试类型中找到平衡，一图胜千言，测试金字塔表现的很到位。下面是个简化版的<a href="https://docs.google.com/presentation/d/15gNk21rjer3xo-b1ZqyQVGebOp_aPvHU3YH7YnOMxtE/edit#slide=id.g437663ce1_53_98" target="_blank" rel="noopener">测试金字塔</a>，来自于<a href="https://developers.google.com/google-test-automation-conference/2014/" target="_blank" rel="noopener">公开的Keynote</a>:      </p>
+<p><img src="/images/just-say-no-to-more-e2e-tests/test-pyramid.png" alt="测试金字塔"></p>
+<p>测试中最大量的内容应是金字塔底层的单元测试。当向金字塔上层移动时，测试范围变的越来越大，同时数量也应越来越少。     </p>
+<p>作为一个参考，Google通常建议70/20/10的比例分割：70%的单元测试，20%的集成测试，10%的end-to-end测试。确切的比例，每个team都会有所不同，但总体来看，应该保持金字塔的形状。要努力避免如下的反模式：    </p>
+<ul>
+<li>融化的冰激凌/倒金字塔。主要依赖于end-to-end测试，使用很少的集成测试，甚至更少的单元测试。</li>
+<li>沙漏。大量的单元测试，然后用end-to-end测试来覆盖本应用集成测试覆盖的内容。沙漏底层有很多的单元测试，顶层有许多的end-to-end测试，但是中间缺少集成测试。    </li>
+</ul>
+<p>就像生活中的三角形更容易保持稳定一样，测试金字塔也可能是最稳定的测试策略。</p>
+<h1 id="文章翻译自"><a href="#文章翻译自" class="headerlink" title="文章翻译自"></a>文章翻译自</h1><p><a href="https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html" target="_blank" rel="noopener">https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+              <a href="/tags/e2e/" rel="tag"># e2e</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/16/know-your-test-doubles/" rel="prev" title="认识一下你的测试替身">
+      <i class="fa fa-chevron-left"></i> 认识一下你的测试替身
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/" rel="next" title="系统划分为模块的范式">
+      系统划分为模块的范式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#理论上的End-to-End测试"><span class="nav-number">1.</span> <span class="nav-text">理论上的End-to-End测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#真实的End-to-End测试"><span class="nav-number">2.</span> <span class="nav-text">真实的End-to-End测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析"><span class="nav-number">3.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#哪些是搞得比较好的"><span class="nav-number">4.</span> <span class="nav-text">哪些是搞得比较好的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#哪些是搞得还不够好的"><span class="nav-number">5.</span> <span class="nav-text">哪些是搞得还不够好的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试真正的价值"><span class="nav-number">6.</span> <span class="nav-text">测试真正的价值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一个失败的测试用例对于用户没有直接好处"><span class="nav-number">7.</span> <span class="nav-text">一个失败的测试用例对于用户没有直接好处</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#对于Bug的修复，是对用户有益的"><span class="nav-number">8.</span> <span class="nav-text">对于Bug的修复，是对用户有益的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简历正确的反馈回路"><span class="nav-number">9.</span> <span class="nav-text">简历正确的反馈回路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#小处着眼，而不是大处着眼"><span class="nav-number">10.</span> <span class="nav-text">小处着眼，而不是大处着眼</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#单元测试"><span class="nav-number">11.</span> <span class="nav-text">单元测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#单元测试与end-to-end测试的对比"><span class="nav-number">12.</span> <span class="nav-text">单元测试与end-to-end测试的对比</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#集成测试"><span class="nav-number">13.</span> <span class="nav-text">集成测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试金字塔"><span class="nav-number">14.</span> <span class="nav-text">测试金字塔</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文章翻译自"><span class="nav-number">15.</span> <span class="nav-text">文章翻译自</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : 'e92707fa2014c699ac52ef5728922543',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

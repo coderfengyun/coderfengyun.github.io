@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文翻译自：https:&#x2F;&#x2F;prl.ccs.neu.edu&#x2F;img&#x2F;p-tr-1971.pdf  摘要本文主要讨论用以提升系统的灵活性及可理解性，同时缩短开发时间的模块化机制。模块化的有效性依赖于模块划分的范式。后文将以两个系统设计为例，对任何一个，都展示了一个常规划分方式和一个非常规划分方式。同时也阐明非常规的划分方式在指定的目标上具备显著优势。这些划分本身遵循的范式也在本文中得到了讨论。非常">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统划分为模块的范式">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="本文翻译自：https:&#x2F;&#x2F;prl.ccs.neu.edu&#x2F;img&#x2F;p-tr-1971.pdf  摘要本文主要讨论用以提升系统的灵活性及可理解性，同时缩短开发时间的模块化机制。模块化的有效性依赖于模块划分的范式。后文将以两个系统设计为例，对任何一个，都展示了一个常规划分方式和一个非常规划分方式。同时也阐明非常规的划分方式在指定的目标上具备显著优势。这些划分本身遵循的范式也在本文中得到了讨论。非常">
+<meta property="og:image" content="http://coderfengyun.github.io/images/on-the-criteria-to-be-used-indecomposing-systems-into-modules/Figure1-Modularization1.png">
+<meta property="article:published_time" content="2021-06-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.303Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="架构设计">
+<meta property="article:tag" content="软件工程">
+<meta property="article:tag" content="模块化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/on-the-criteria-to-be-used-indecomposing-systems-into-modules/Figure1-Modularization1.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>系统划分为模块的范式 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/24/on-the-criteria-to-be-used-indecomposing-systems-into-modules/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          系统划分为模块的范式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-24 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-24T00:00:00+08:00">2021-06-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">架构设计</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>本文翻译自：<a href="https://prl.ccs.neu.edu/img/p-tr-1971.pdf" target="_blank" rel="noopener">https://prl.ccs.neu.edu/img/p-tr-1971.pdf</a></p>
+</blockquote>
+<h1 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h1><p>本文主要讨论用以提升系统的灵活性及可理解性，同时缩短开发时间的模块化机制。模块化的有效性依赖于模块划分的范式。后文将以两个系统设计为例，对任何一个，都展示了一个常规划分方式和一个非常规划分方式。同时也阐明非常规的划分方式在指定的目标上具备显著优势。这些划分本身遵循的范式也在本文中得到了讨论。非常规的划分方式，常规划分方式是指一个模块🈶一个或多个子程序组成，在大多数情况下都可能不会发挥应有效力。文章也简单描述了另一种没有这样（负面）影响的实现方式。</p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>如果程序员会唱赞美诗，那么大部分流行的赞美诗将献给模块化编程。作者在一本讲述系统设计的书中找到这么一句关于模块化编程哲学的表述：</p>
+<blockquote>
+<p>在明确定义项目如何分段上的努力使得系统具备模块化特性。每个任务形成了一个独立的程序模块。在实现阶段，每个模块的input和output都被很好的定义了，对于系统其他模块来说都不存在着不明确。在验证的时候，模块是否完整的实现了TA的承诺则被分别测试；验证阶段也不需要协调多个任务的完成时间。最后，系统通过模块化的方式维护；系统错误和依赖可以被追踪到具体的模块，因此缩小了缺陷搜查的范围。</p>
+</blockquote>
+<p>首先，我非常赞同这段陈述，但不太赞同引申而来的一些可能的诠释。注意，关于如何将系统划分为多个模块，上述论述什么也没聊。因为将系统划分为大小适中的模块的决定并不能真的导向解耦，本文会讨论这个问题，并且将通过例子的方式，推荐一种应该被用来将系统划分为模块的范式。</p>
+<h1 id="回顾下该领域的现状"><a href="#回顾下该领域的现状" class="headerlink" title="回顾下该领域的现状"></a>回顾下该领域的现状</h1><p>在模块化编程领域的主要进展是(1)编码技巧的发展以及(2)编译器在“在编写一个模块时可以不关心其他模块”上的发展，其中(2)使得模块可以独立于整个系统来重新编制和替换。这项便利对于生产大规模代码是极有价值的，但这项技术的使用还没带来预期的收益。事实上，那些经常被用来讲述大规模系统的例子本身就是高度模块化的程序，这些程序使用了上述复杂的编码和编译技术。      </p>
+<h1 id="模块化编程承诺的优势"><a href="#模块化编程承诺的优势" class="headerlink" title="模块化编程承诺的优势"></a>模块化编程承诺的优势</h1><p>模块化编程承诺的优势可以分为如下三类：(1)可管理 – 因为不同组织工作在不同的模块，且极少需要沟通(也不必事后后悔当时为什么没做更充分的沟通)，因此研发时间被大大缩短了；(2)生产的灵活性 – 希望能够做到一个模块发生剧烈变化是可以不影响其他模块；(3)可读性 – 希望整个系统可以被逐个模块的学习，因为更容易理解系统也就会得到更好的设计。</p>
+<h1 id="什么是“模块化”"><a href="#什么是“模块化”" class="headerlink" title="什么是“模块化”"></a>什么是“模块化”</h1><p>在这个的上下文中，模块最好被理解为一个独立的工作单元而不是一个子程序。模块化想要描述的是在各个模块的工作开始前必须要做的设计决策。尽管在不同的方案中的决策差异极大，但所有方案的(决策)意图都被描述为系统级的决策(例如，那些会影响超过一个模块的决策)。    </p>
+<h1 id="示例系统1：关键字索引生成系统"><a href="#示例系统1：关键字索引生成系统" class="headerlink" title="示例系统1：关键字索引生成系统"></a>示例系统1：关键字索引生成系统</h1><p>对于不了解什么是关键字索引的人来说，下面这段（关于关键字索引）介绍对于理解本文就足够了。关键字索引系统接收一个顺序的文字行的集合，每一行是一个顺序的词的集合，每个词是一个顺序的字母的集合(对于英文)。每一行都可能是”循环移位的”，即，不断地将第一个单词移掉在拼接到行的末尾。这个关键字索引系统以字母序输出每一行的所有循环移位。这是个很小的系统。除非是极端情况(巨大的数据集，没有支持软件)，这样一个系统都可以在1-2周的时间搞定。因此这是个不合适的例子，因为没有任何必要在这样的系统上进行模块化编程。因为细致又完全地分解一个大系统是不实际的，因此我们还是试着把这个问题当做是个大项目吧。我们给出了两种模块化的方式。第一个，我们觉着，是现在比较典型的工程划分办法；另一个是在毕设中成功被应用的划分方法。</p>
+<h2 id="模块划分方法一"><a href="#模块划分方法一" class="headerlink" title="模块划分方法一"></a>模块划分方法一</h2><p>我们看下面的模块：<br>Module 1：输入：这个模块包含一个主程序，TA读取输入设备中的数据行，然后存储在core中，以待其他模块的处理。在core中，每四个字符被存储在一个字中，一个未被使用的字符被用来标识一个字的结束。维护了一个索引来展示每行的开始地址。<br>Module 2：循环移位：这个模块在输入模块结束之后被调用。本模块准备了一个索引，用以给出每个循环移位的开始字符，以及module 1生成的行数组的原始index，而不是将所有循环移位都存在core里，本模块把输出通过一个个的pair存入core中（每个pair由原始行号，开始地址组成）。<br>Module 3：字母序排序：本模块把module 1和module 2的输出作为输入。本模块产生了一个跟module 2（产生的结果）一样的数组。然后，将其按照字母序排序。<br>Module 4：输出：使用module 3和module 1输出的数组，本模块输出一个格式化好的输出，该输出列出了所有的循环移位。在一个复杂系统中，每一行的起始点会被标记，指向一行中更多信息的指针会在后续的步骤中被插入进来，每个循环移位的起始可能不是行中的第一个字母，等等。<br>Module 5：主流程控制：这个模块只关注以一定的顺序把上述四个模块串联起来。TA也可能会处理错误信息，内存分配等等。<br>很明确，上述的说明并不是一个详尽的文档。在正式工作开始前，还需要提供更多的信息。定义文档应该包含一系列展示核心格式，指针使用规范，调用规范等等。只有当四个模块间的所有接口被确定之后，工作才能真的开始。<br>这是大部分的模块化编程支持真想要表达的“模块化”。系统被划分成几个相对独立的模块，且模块间接口定义清晰；每一个模块足够小，且足够简单，使得更容易理解以及编码。小范围的实验表明，这几乎是大部分接到这个任务的程序员首选的模块分解方式。图1给出了这个系统的结构图。</p>
+<p><img src="/images/on-the-criteria-to-be-used-indecomposing-systems-into-modules/Figure1-Modularization1.png" alt="图1，模块化方式1"></p>
+<h2 id="模块化方法2"><a href="#模块化方法2" class="headerlink" title="模块化方法2"></a>模块化方法2</h2><p>我们看如下的模块：<br>Module 1：Line Storage：这个模块包含了几个方法，这些方法在图2中给出了精确的定义。通过调用这些方法，可以在最后一行的最后一个单词增加一个字母，开始一个新的单词，或开始新的一行。也可以通过调用其他方法来查找第j行的的第k个单词的第k个字母。本模块的其他方法，可以用来查找行数，一行中的单词数，一个单词的字母数。这个模块的精确定义在图2中。定义的方法在引文[3]中详细阐述了。<br>Module 2: Input：这个模块从输入设备中读取原始输入，调用Line Storage模块来存储。<br>Module 3: 循环移位器：这个模块包含了如下几个方法：CSSTUP使得其他的方法又有初始值。其他的方法与模块1中提供的方法信息类似。使用他们，可以得到第i个循环移位的第j个单词的第k个字母，同时也可以获得所有行、单词的长度，等等。这也在图3中展示出来了。<br>Modeule 4：字母顺序排序器：这个模块主要包含两个方法。第一个，ALPH，必须在另一个方法(ITH)有了初始值之前调用。第二个，ITH，作为一个索引使用。ITH(i)会给出在字母序排序后的第i行在循环移位中的下标。这些方法的正式定义在图4中描述。<br>Module 5：输出：这个模块提供了任意循环移位需要的打印方式。该模块需要在循环移位方法之后被调用。<br>Module 6：主控制逻辑：与模块化方式1中的(主控制模块)类似。    </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line">Figure 2：LineStorage定义</span><br><span class="line">介绍：这份定义描述了一个机制，该机制会容纳p1行，每行包含最多p2个词，每个词包含最多p3个字母。</span><br><span class="line">其中ERLXXX的方法需要由模块的使用者提供。这个调用意味着该用户违背了模块定义的约束；这些方法中需要包含TA自己的恢复逻辑。</span><br><span class="line"></span><br><span class="line">Function WORD</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: undefined</span><br><span class="line">	<span class="keyword">parameters</span>: l, w, c <span class="keyword">all</span> integers</span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERLWEL <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; p1</span><br><span class="line">		<span class="keyword">call</span> ERLWNL <span class="keyword">if</span> l &gt; <span class="keyword">LINES</span></span><br><span class="line">		<span class="keyword">call</span> ERLWEW <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; p2</span><br><span class="line">		<span class="keyword">call</span> ERLWNE <span class="keyword">if</span> w &gt; WORDS(l)</span><br><span class="line">		<span class="keyword">call</span> ERLWEC <span class="keyword">if</span> c &lt; <span class="number">1</span> <span class="keyword">or</span> c &gt; p3</span><br><span class="line">		<span class="keyword">call</span> ERLWNC <span class="keyword">if</span> c &gt; CHARS(l, w)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> SETWRD</span><br><span class="line">	possible <span class="keyword">values</span>: non</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: <span class="keyword">not</span> applicable</span><br><span class="line">	<span class="keyword">parameters</span>: l,w,c,d <span class="keyword">all</span> integers</span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERLSLE <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; p1</span><br><span class="line">		<span class="keyword">call</span> ERLSBL <span class="keyword">if</span> l &gt; <span class="string">'LINES'</span> + <span class="number">1</span></span><br><span class="line">		<span class="keyword">call</span> ERLSBL <span class="keyword">if</span> l &lt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERLSWE <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; p2</span><br><span class="line">		<span class="keyword">call</span> ERLSBW <span class="keyword">if</span> w &gt; <span class="string">'WORDS'</span>(l) + <span class="number">1</span></span><br><span class="line">		<span class="keyword">call</span> ERLSBW <span class="keyword">if</span> w &lt; <span class="string">'WORDS'</span>(l)</span><br><span class="line">		<span class="keyword">call</span> ERLSCE <span class="keyword">if</span> c &lt; <span class="number">1</span> <span class="keyword">or</span> c &gt; p3</span><br><span class="line">		<span class="keyword">call</span> ERLSBC <span class="keyword">if</span> c .noteq. <span class="string">'CHARS'</span>(l,w)+<span class="number">1</span></span><br><span class="line">		<span class="keyword">if</span> l = <span class="string">'LINES'</span> + <span class="number">1</span> <span class="keyword">then</span> <span class="keyword">LINES</span> = <span class="keyword">LINES</span> + <span class="number">1</span></span><br><span class="line">		<span class="keyword">if</span> w = <span class="string">'WORDS'</span>(l) + <span class="number">1</span> <span class="keyword">then</span> WORDS(l) = w</span><br><span class="line">		CHARS(l, w) = c</span><br><span class="line">		WORD(l,w,c) = d</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> WORDS</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: l an <span class="built_in">integer</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERLWSL <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; p1</span><br><span class="line">		<span class="keyword">call</span> ERLWSL <span class="keyword">if</span> l &gt; <span class="keyword">LINES</span></span><br><span class="line">		<span class="keyword">call</span> ERLWSL(MN) <span class="keyword">if</span> l &gt; <span class="keyword">LINES</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> <span class="keyword">LINES</span></span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: <span class="keyword">none</span></span><br><span class="line">	effect: non</span><br><span class="line">	</span><br><span class="line"><span class="keyword">Function</span> DELWRD</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="keyword">none</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="keyword">not</span> applicable</span><br><span class="line">	<span class="keyword">parameters</span>: l,w <span class="keyword">both</span> integers</span><br><span class="line">	effect: </span><br><span class="line">		<span class="keyword">call</span> ERLDLE <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; <span class="keyword">LINES</span></span><br><span class="line">		<span class="keyword">call</span> ERLDWE <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; <span class="string">'WORDS'</span>(<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">call</span> ERLDLD <span class="keyword">if</span> <span class="string">'WORDS'</span>(l) = <span class="number">1</span></span><br><span class="line">		WORDS(l) = <span class="string">'WORDS'</span>(l) - <span class="number">1</span></span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">all</span> c WORD(l,v,c) = <span class="string">'WORD'</span>(l, v+<span class="number">1</span>, c) <span class="keyword">if</span> v &gt;= w</span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">all</span> v &gt; w <span class="keyword">or</span> v = w CHARS(l, v) = <span class="string">'CHARS'</span>(l, v+<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> DELLINE</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="keyword">none</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: <span class="keyword">not</span> applicable</span><br><span class="line">	<span class="keyword">parameters</span>: l an <span class="built_in">integer</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERLDLL <span class="keyword">if</span> l &lt; <span class="number">0</span> <span class="keyword">or</span> l &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">LINES</span> = <span class="string">'LINES'</span> - <span class="number">1</span></span><br><span class="line">		<span class="keyword">if</span> r = <span class="number">1</span> <span class="keyword">or</span> r &gt; <span class="number">1</span> <span class="keyword">then</span> <span class="keyword">for</span> <span class="keyword">all</span> w, <span class="keyword">for</span> <span class="keyword">all</span> c</span><br><span class="line">					(WORDS(r) = <span class="string">'WORDS'</span>(r+<span class="number">1</span>)</span><br><span class="line">					 CHARS(r, w) = <span class="string">'CHARS'</span>(r+<span class="number">1</span>, w)</span><br><span class="line">					 WORD(r, w ,c) = <span class="string">'WORD'</span>(r+<span class="number">1</span>, w ,c))</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> CHARS</span><br><span class="line">	possible vlaues: <span class="built_in">integer</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: l,w <span class="keyword">both</span> integers</span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERLCNL <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; <span class="keyword">LINES</span></span><br><span class="line">		<span class="keyword">call</span> ERLCNW <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; WORDS(l)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">Figure 3 循环移位模块定义</span><br><span class="line">在本定义中，我们假定line holder的方法有值，并且定义一个方法（TA允许我们以各种方式处理lineholder，除了把行的所有循环移位都包含在line holder中）。一个附带的功能是可以把指定行标记为"取消"，尽管他们可以访问。     </span><br><span class="line">Function CSWROD</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: undefined</span><br><span class="line">	<span class="keyword">parameters</span>: l,w,c <span class="keyword">all</span> <span class="built_in">integer</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERCWNL(MN) <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; p4</span><br><span class="line">		<span class="keyword">call</span> ERCWNL(MN) <span class="keyword">if</span> l &gt; CSLINES</span><br><span class="line">		<span class="keyword">call</span> ERCWNW(MN) <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; p2</span><br><span class="line">		<span class="keyword">call</span> ERCWNC(MN) <span class="keyword">if</span> c &lt; <span class="number">1</span> <span class="keyword">or</span> c &gt; p3</span><br><span class="line">		<span class="keyword">call</span> ERCWNC(MN) <span class="keyword">if</span> c &gt; CSCHARS(l,w)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> CSWORDS</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: l an <span class="built_in">integer</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERCWNL(MN) <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; p4</span><br><span class="line">		<span class="keyword">call</span> ERCWNW(MN) <span class="keyword">if</span> l &gt; CSLINES</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> CSLINES</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: <span class="keyword">none</span></span><br><span class="line">	effect: <span class="keyword">none</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> CSCHRS</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="built_in">integer</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="number">0</span></span><br><span class="line">	<span class="keyword">parameters</span>: l,w <span class="keyword">both</span> integers</span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERCCNL(MN) <span class="keyword">if</span> l &lt; <span class="number">1</span> <span class="keyword">or</span> l &gt; CSLINES</span><br><span class="line">		<span class="keyword">call</span> ERCCNW(MN) <span class="keyword">if</span> w &lt; <span class="number">1</span> <span class="keyword">or</span> w &gt; CSWORDS(l)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> CSSTUP</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="keyword">none</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: <span class="keyword">not</span> applicable</span><br><span class="line">	<span class="keyword">parameters</span>: <span class="keyword">none</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERCNES(MN) <span class="keyword">if</span> <span class="keyword">SUM</span>(<span class="number">1</span>,l,<span class="string">'LINES'</span>,<span class="string">'WORDS'</span>(<span class="number">1</span>)) &gt; p4</span><br><span class="line">		CSLINES = <span class="keyword">SUM</span>(<span class="number">1</span>, l, <span class="string">'LINES'</span>, <span class="string">'WORDS'</span>(l))</span><br><span class="line">		let HIP(l) = <span class="keyword">minimum</span> k such that <span class="keyword">SUM</span>(<span class="number">1</span>, l, k, <span class="string">'WORDS'</span>(l)) .&gt; <span class="keyword">or</span> =.</span><br><span class="line">		let SHI(l) = l - <span class="keyword">SUM</span>(<span class="number">1</span>, l, HIP(<span class="number">1</span>) - <span class="number">1</span>, <span class="string">'WORDS'</span>(l) - <span class="number">1</span>)</span><br><span class="line">		<span class="keyword">then</span> <span class="keyword">for</span> <span class="keyword">all</span> l such that l .&lt; <span class="keyword">or</span> =. CSLINES</span><br><span class="line">			CSWORDS(l) = <span class="string">'WORDS'</span>(HIP(l))</span><br><span class="line">			CSCHARS(l,w) = <span class="string">'CHARS'</span>(HIP(l), (w+SHI(l))<span class="keyword">mod</span> <span class="string">'CHWORDS'</span>(l))</span><br><span class="line">			CSWORD(l,w,c) = <span class="string">'WORD'</span>(HIP(l), (w+SHI(l))<span class="keyword">mod</span> <span class="string">'CSWORDS'</span>(l), c)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">Figure 4 对于Line Holder做字母序排序</span><br><span class="line">这个模块完成对于上述模块产生的内容进行字母序排序，本模块提供了一个方法ITH，TA给出了第i行在字母序排序后的序列中的下标。</span><br><span class="line"></span><br><span class="line">Function ITH</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: undefined</span><br><span class="line">	<span class="keyword">parameters</span>: i an <span class="built_in">integer</span></span><br><span class="line">	effect: </span><br><span class="line">		<span class="keyword">call</span> ERAIND <span class="keyword">if</span> <span class="keyword">value</span> <span class="keyword">of</span> <span class="keyword">function</span> undefined <span class="keyword">for</span> parameter given</span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> ALPHC</span><br><span class="line">	possible <span class="keyword">values</span>: integers</span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">value</span>: ALPHC(l) = <span class="keyword">index</span> <span class="keyword">of</span> l <span class="keyword">in</span> alphabet used</span><br><span class="line">		       ALPHC(l) = infinite <span class="keyword">if</span> <span class="built_in">character</span> <span class="keyword">not</span> <span class="keyword">in</span> alphabet</span><br><span class="line">		       ALPHC(undefined) = <span class="number">0</span></span><br><span class="line">	parameter: l an <span class="built_in">integer</span></span><br><span class="line">	effect: </span><br><span class="line">		<span class="keyword">call</span> ERAABL <span class="keyword">if</span> l <span class="keyword">not</span> <span class="keyword">in</span> alphabet being used, i.e., <span class="keyword">if</span> ALPHC(<span class="number">1</span>) = infinite</span><br><span class="line"></span><br><span class="line"><span class="keyword">Mapping</span> <span class="keyword">Function</span> EQW</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="literal">true</span>, <span class="literal">false</span></span><br><span class="line">	<span class="keyword">parameters</span>: l1, l2, w1, w2 <span class="keyword">all</span> integers</span><br><span class="line">	<span class="keyword">values</span>：EQW(l1, l2, w1, w2) = <span class="keyword">for</span> <span class="keyword">all</span> c(<span class="string">'WORD'</span>(l1, w1, c) = <span class="string">'WORD'</span>(l2, w2, c))</span><br><span class="line">	effect：</span><br><span class="line">		<span class="keyword">call</span> ERAEBL <span class="keyword">if</span> l1 &lt; <span class="number">1</span> <span class="keyword">or</span> l1 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERAEBL <span class="keyword">if</span> l2 &lt; <span class="number">1</span> <span class="keyword">or</span> l2 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERAEBW <span class="keyword">if</span> w1 &lt; <span class="number">1</span> <span class="keyword">or</span> w1 &gt; <span class="string">'WORDS'</span>(l1)</span><br><span class="line">		<span class="keyword">call</span> ERAEBW <span class="keyword">if</span> w2 &lt; <span class="number">1</span> <span class="keyword">or</span> w2 &gt; <span class="string">'WORDS'</span>(l2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Mapping</span> <span class="keyword">Function</span> ALPHW</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="literal">true</span>, <span class="literal">false</span></span><br><span class="line">	<span class="keyword">parameters</span>：l1, l2, w1, w2 <span class="keyword">all</span> integers</span><br><span class="line">	<span class="keyword">values</span>: ALPHW(l1, w1, l2, w2) = <span class="keyword">if</span> !<span class="string">'EQW'</span>(l1, w1, l2, w2) <span class="keyword">and</span></span><br><span class="line">		k = <span class="keyword">min</span> c such that (<span class="string">'WORD'</span>(l1, w1, c) != <span class="string">'WORD'</span>(l2, w2, c))</span><br><span class="line">		<span class="keyword">then</span> <span class="string">'ALPH'</span>(<span class="string">'WORD'</span>(l1, w1, k)) &lt; <span class="string">'ALPHC'</span>(<span class="string">'WORD'</span>(l2, w2, k))</span><br><span class="line">		<span class="keyword">else</span> <span class="literal">false</span>;</span><br><span class="line">	effect: </span><br><span class="line">		<span class="keyword">call</span> ERAWBL <span class="keyword">if</span> l1 &lt; <span class="number">1</span> <span class="keyword">or</span> l1 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERAWBL <span class="keyword">if</span> l2 &lt; <span class="number">1</span> <span class="keyword">or</span> l2 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERAWBW <span class="keyword">if</span> w1 &lt; <span class="number">1</span> <span class="keyword">or</span> w1 &gt; <span class="string">'WORDS'</span>(l1)</span><br><span class="line">		<span class="keyword">call</span> ERAWBW <span class="keyword">if</span> w2 &lt; <span class="number">1</span> <span class="keyword">or</span> w2 &gt; <span class="string">'WORDS'</span>(l2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">Mapping</span> <span class="keyword">Function</span> EQL</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="literal">true</span>, <span class="literal">false</span></span><br><span class="line">	<span class="keyword">parameters</span>: l1, l2 <span class="keyword">both</span> integers</span><br><span class="line">	<span class="keyword">values</span>: EQL(l1, l2) = <span class="keyword">for</span> <span class="keyword">all</span> k (<span class="string">'EQW'</span>(l1, k, l2, k))</span><br><span class="line">	effect: </span><br><span class="line">		<span class="keyword">call</span> ERALEL <span class="keyword">if</span> l1 &lt; <span class="number">1</span> <span class="keyword">or</span> l1 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERALEL <span class="keyword">if</span> l2 &lt; <span class="number">1</span> <span class="keyword">or</span> l2 &gt; <span class="string">'LINES'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Mapping</span> <span class="keyword">Function</span> ALPHL</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="literal">true</span>, <span class="literal">false</span></span><br><span class="line">	<span class="keyword">parameters</span>: l1, l2 <span class="keyword">both</span> integers</span><br><span class="line">	<span class="keyword">values</span>: ALPHL(l1, l2) = <span class="keyword">if</span> !<span class="string">'EQL'</span>(l1, l2) <span class="keyword">then</span></span><br><span class="line">		(let k = <span class="keyword">min</span> c such that <span class="string">'EQW'</span>(l1, k, l2, k))</span><br><span class="line">		<span class="string">'ALPHW'</span>(l1, k, l2, k) <span class="keyword">else</span> <span class="literal">true</span></span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">call</span> ERAALB <span class="keyword">if</span> l1 &lt; <span class="number">1</span> <span class="keyword">or</span> l1 &gt; <span class="string">'LINES'</span></span><br><span class="line">		<span class="keyword">call</span> ERAALB <span class="keyword">if</span> l2 &lt; <span class="number">1</span> <span class="keyword">or</span> l2 &gt; <span class="string">'LINES'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Function</span> ALPH</span><br><span class="line">	possible <span class="keyword">values</span>: <span class="keyword">none</span></span><br><span class="line">	<span class="keyword">initial</span> <span class="keyword">values</span>: <span class="keyword">not</span> applicable</span><br><span class="line">	effect:</span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">all</span> i &gt;=<span class="number">1</span> <span class="keyword">and</span> i &lt;= <span class="string">'LINES'</span> (</span><br><span class="line">		ITH(i) <span class="keyword">is</span> given <span class="keyword">values</span> such that (</span><br><span class="line">			<span class="keyword">for</span> <span class="keyword">all</span> j &gt;= <span class="number">1</span> <span class="keyword">and</span> j &lt;= <span class="keyword">LINES</span></span><br><span class="line">			there <span class="keyword">exists</span> a k such that ITH(k) = j</span><br><span class="line">		<span class="keyword">for</span> i &gt; <span class="number">-1</span> <span class="keyword">and</span> i &lt; <span class="string">'LINES'</span> (that <span class="string">'ALPHL'</span>(ITH(i), ITH(i+<span class="number">1</span>)))</span><br><span class="line">		)</span><br><span class="line">		)</span><br></pre></td></tr></table></figure>
+<h2 id="比较这两个模块化方法"><a href="#比较这两个模块化方法" class="headerlink" title="比较这两个模块化方法"></a>比较这两个模块化方法</h2><p>两种方式都是可以工作的，第一个是非常常见的做法；第二个被成功的应用在一个课程项目中了。两种方式都将编程工作分解成了多个相对独立的，小的，可控的程序。我们必须看的更加深入，才能看到我们之前承诺的目标达到了什么程度。<br>我必须强调在两种分解方式中，我没有修改任何的描述或方法。我的目标就是把原本可能是一个客观实体的内容以两种方式切分开。以第一种分解方式划分的系统在经过编译后可以与第二种分解方式下的系统在功能上是完全相同的。两个以不同方式划分出来的系统的主要区别是，这些模块的定义，工作的划分方式，接口等。在两个系统中用的算法可以是相同的。我想强调的是，即使系统的运行时表现相同，他们也是完全不同的。这可能是因为运行时表示是只用来运行的（面向机器的）；其他的表示则是用来更改，写文档，理解的。在其他的表示中，这两个系统就完全不同了。<br>(1) Changeability。一些设计决策可能是有问题的，并且在多数情况下很容易改变。一个不完全列表如下：    </p>
+<ol>
+<li>输入格式。</li>
+<li>将所有行存储在内存里的决策。对于大型索引，在同一时间将所有行存储在内存中可能是不方便或完全不可能的。</li>
+<li>将四个字母压缩成一个word存储的决策。在处理较小的索引时，可能不需要压缩这些字母，将存储变为一个字母一个word很可能会降低开发/执行时间。甚至有可能，我们会希望以其他格式来压缩存储。</li>
+<li>对循环移位做index而不是把所有的循环移位都存储起来，这个决策，也是一样的。再一次，对于一个小索引或一个大内存，直接存储所有循环移位可能是最高效的。</li>
+<li>一次性将整个列表排序而不是在需要时查询，或者是类似Hoare’s查找中实现的部分排序，这个决策，也是类似。在一些场景下，将创建索引时排序所需的计算分散开，可能会是比较有利的。</li>
+</ol>
+<p>通过观察这些改变，我们可以看到上述两种模块化方式的区别。第一种变化，在两种模块化方式中，都被控制在一个模块中了，但第二种改变会导致第一种模块化方式中所有模块的变更。第三种变化也是同样。在第一种分解方式中，行的存储格式必须被所有模块使用。在第二种分解方式中，故事则完全不同。行存储的确切方式，被完全隐藏起来了，除了module 1没有人需要了解。所有存储方式上的变更，也都只需要改这一个模块。    </p>
+<p>实际上，在这个系统的多个版本中，分解时还存在着附加的模块。一个符号表被用来实现行的存储模块。这个事实，是真的，也是对系统的其余部分完全不可见。      </p>
+<p>第四种变化，对于第二种分解方式，只影响循环移位模块；但在第一种划分方式中，排序模块与输出模块也需要了解这个变化。     </p>
+<p>第五种变化，在第一种分解方式中也是困难的。输出模块会其他索引已经被完全排好序了。第二种分解方式中的排序模块被设计得用户无法发现排序确切是在什么时候进行的。没有其他模块需要变化。<br>(2) 独立开发。在第一个模块化方式中，各个模块间的接口是比较复杂的，如上面的表格描述的。这些现存的设计决策不容易被轻易的改变。表结构与组织方式关系到多个模块的效率，因此必须被仔细设计。这个部分的开发会成为模块开发的一个重要部分，但该部分还需要多个开发团队的共同协作。在第二种模块化方式中，接口更加抽象，他们只包含方法名和参数的类型和数量。有一些简单的决策和模块的独立开发可以更早开始。     </p>
+<p>(3) 可读性。为了理解第一种模块化方式中的输出模块，必须要理解排序模块，循环移位模块和输入模块。输出模块使用的表，有许多信息是因为其他模块的工作依赖与此。会因为其他模块使用的算法影响表的结构。整个系统必须要放在一起才能理解。我的主观判断是，在第二种模块化方式中不存在这样的问题。    </p>
+<h2 id="划分的标准"><a href="#划分的标准" class="headerlink" title="划分的标准"></a>划分的标准</h2><p>现在，大多数读者应该明白，每种划分方式使用了怎样的标准了。在第一个划分方式中，标准是将每个“主要步骤”在一个单独模块中处理。也可以说，通过第一种划分方式，得到了一个流程图。图1是一个流程图。这是最常见的划分方式了。这是所有程序员培训的副产品，这些培训教我们先从一个大致的流程图开始，然后再逐步填充实现。当代码量在5000-10000行时，流程图是一种有用的抽象，但一旦超出这个界限，流程图看起来就不够用了；一些额外的标准必须被加进来。<br>第二种划分方式是以“信息隐藏”为标准划分的。这些模块不再对应于流程中的一个步骤。例如，行存储模块，被系统中的大部分行为使用了。排序可能也可能不对应一流程中的一个阶段，这完全取决于怎么用了。类似的，循环移位在一些场景下，不提前存任何表，完全是在按需计算。第二种分解方式中的每一个模块都是，按照它需要对其他模块隐藏的设计决策，来描述的。TA的接口或是定义会尽量少的展示其内部究竟是如何工作的。     </p>
+<h2 id="循环移位模块的优化"><a href="#循环移位模块的优化" class="headerlink" title="循环移位模块的优化"></a>循环移位模块的优化</h2><p>为了展示划分标准的影响，让我们再仔细看看第二种划分方式中的循环移位模块的定义。后见之明，这个定义中包含了不需要暴露的信息。当我们小心的隐藏存储及计算循环移位列表的具体实现时，我们预示着该列表是有序的。程序可以被高效的写出来，如果我们只说明: (1)循环移位定义中的”lines”都会在”table”中存在，(2)有且只包含一次，(3) 有个方法可以提供这样的能力，即可以根据”shift”得到原始行。通过提前描述循环移位的顺序，我们提供了很多不必要的信息，这些信息反过来制约了我们系统在不改变定义前提下的灵活性。例如，我们没有允许构建这样一个系统，在这个系统中，循环移位以字母序的方式产生，alph是空的，且ITH简单的返回了入参。如果我们使用第二种分解方式构建系统时，这可以非常清晰的被认定为设计失误。    </p>
+<h2 id="效率和实现"><a href="#效率和实现" class="headerlink" title="效率和实现"></a>效率和实现</h2><p>如果我们不小心一点，第二中分解方式将会非常低效。如果每个功能点被实现成了一个需要进行一系列调用的程序，那么将会产生大量跨module频繁切换控制权的调用。第一种分解方式则不受这个问题的影响，因为相对来说模块间控制流的转移不算频繁。<br>为了在避免程序调用的额外开销的同时还能获得第二种分解方式的好处，我们我们必须采用一种非常规方式来实现这些模块。大多数情况下，常用方法最好是通过汇编器插入到代码中；其他情况下，高度定制且高效的转移需要被单独插入。为了成功且高效的使用第二种解耦方式，需要一个工具，通过这个工具可以实现，方法看起来像实际存在的，但其实现可以在汇编时选择合适的（就是dependency injection）。如果使用这样的技术，模块划分在最终生成的代码中可能是看不出来的。换句话说，程序的另一种表示(前面提到的)必须在”支持映射该展现模式”的机器上运维起来。    </p>
+<h1 id="第二个例子：一个MARKOV算法翻译器"><a href="#第二个例子：一个MARKOV算法翻译器" class="headerlink" title="第二个例子：一个MARKOV算法翻译器"></a>第二个例子：一个MARKOV算法翻译器</h1><p>尽管第一个例子已经展示了本文的大部分观点，再看看其他的例子也会非常有帮助。这是一个要实现Markov算法的翻译器。Markov算法在很多地方都被论述过了；作为编程语言的描述最棒的是Galler and Perlis。对于那些不熟悉的人，Markov算法可以被描述为穷人版SNOBOL。机器上唯一的内存是一个字符串(只要需要就可以随意扩展)。算法通过一系列的规则描述。每个规则包含一个待匹配的规则，和一个用于替换被匹配部分的字符串。顺序性原则标明规则的匹配遵循最左匹配原则（匹配一次则不再匹配）。当替换完成之后，第一个可应用规则仍然有效(例如，对于最后一个规则来说没有内存供匹配了，即到头了)。    </p>
+<h2 id="常规的模块化方式"><a href="#常规的模块化方式" class="headerlink" title="常规的模块化方式"></a>常规的模块化方式</h2><p>对于这种翻译器，有两种常见的模块化方式。他们分别是：</p>
+<h3 id="Interpretor"><a href="#Interpretor" class="headerlink" title="Interpretor"></a>Interpretor</h3><p>输入模块：读取输入，分析成规则列表，把规则的一种直接表现形式存进主存中。<br>Intepretor：尝试将每一条规则应用到寄存器上。TA访问存储规则的数据结构，使用对应的pattern来做匹配，如果匹配上了，就替换掉寄存器上对应的部分。<br>也会有个输出模块，来做对应的打印。     </p>
+<h3 id="Compiler："><a href="#Compiler：" class="headerlink" title="Compiler："></a>Compiler：</h3><p>输入模块：读取输入，分析，并将每个句法单元作为参数传给下一个模块，encoder。<br>Encoder：这个模块包含用于“运行一个规则或部分规则”，并产生对应的机器码程序，例如，TA们对每个pattern分别产生一个机器码程序，这些程序搜索对应pattern出现的位置。这被称为编译代码。<br>运行时：包含了机器码成需的标准集合，这些程序会被各个算法使用。被编译的程序被链接到这些标准程序上，比如输出方法等等。</p>
+<h2 id="一种替代的搞法"><a href="#一种替代的搞法" class="headerlink" title="一种替代的搞法"></a>一种替代的搞法</h2><p>我们成功的使用了如下的模块化方式：<br>规则存储：在主存中存储了规则的一种表示形式。这个模块跟之前说的Line存储有点相近。<br>规则分析：了解规则的具体含义，例如，知道如何解析存储的规则，以及如何应用这些规则。<br>寄存器操作：包含了一系列操作寄存器的常用方法。<br>排序器：选择下一个要被应用的规则。<br>输入：读取输入，然后调用规则存储及寄存器操作模块，来做内部存储。<br>输出：对寄存器做必要的打印，以及最好一条规则的应用，等等。    </p>
+<h2 id="对于第二个例子的讨论"><a href="#对于第二个例子的讨论" class="headerlink" title="对于第二个例子的讨论"></a>对于第二个例子的讨论</h2><p>许多关于第一个例子的讨论都可以在这里重复。例如将寄存器操作模块与其他模块分离开，使得修改寄存器的具体展示方式更加容易。规则排序与规则分析的分离，使得更容易尝试其他形式的Markov算法。<br>我们选择这个例子是为了表明另一个观点。这种模块化方式没有在解释器或编译器上做出决策。我们可以将一个解释型翻译器和一个编译型翻译器相对容易的替换，且我们也可以从二者身上各自选取一些优点。寄存器操作，排序器，输入和输出都可以保持不变。主要的修改都会集中在分析器模块上，假如采用编译器模式那么就将生成的机器码程序存储起来，但如果使用的是解释器模式就在被调用时应用这些规则。在这两种方式中可能存在这大量相同的代码。例如，寄存器操作代码可以在两个版本中都被使用。在编译器方式中，(寄存器操作代码)是运行时程序的一部分；在解释器方式中，会被规则解析模块调用。    </p>
+<h1 id="层次化结构"><a href="#层次化结构" class="headerlink" title="层次化结构"></a>层次化结构</h1><p>我们可以通过Dijkstra提出的分解方式方式找到程序的层次结构。如果一个符号表存在，并且可以不依赖其他模块工作，那么TA在第一层。如果没有用符号表的话，Line存储在第一层；如果用了符号表，则在第二层。输入和循环移位器需要Line存储。输出和排序器需要循环移位器，但由于循环移位器和line holder在某种意义上是兼容的，因此做一个可以用于同时支持排序/输出原始行或者循环移位后的行的程序是比较容易的。在第一种(打印原始行)使用方式中不需要循环移位器；在第二种(打印循环移位后的行)则需要。换句话说，我们的设计允许我们将一种程序运行在两个不同的层次上。<br>在讨论系统结构的时候，容易混淆好的分解方式的收益和层次化结构的收益。如果模块或程序将可以定义某种关系，且该关系是偏序的，那么我们就拥有了一个层次结构。我们关注的关系主要是”uses”或”depends upon”。如果大多数情况下，一个模块只依赖于有限个其他模块，那么在程序之间有关系是比较好的(例如循环移位器只依赖与line holder的输出部分，与SETWORD则无关)。可以想象，我们可以获得我们讨论过的好处，但不依赖于偏序，比如，所有的模块都在同一层。偏序关系给了我们另外的两个好处。第一，上层系统可以使用下层系统提供的能力。第二，我们可以砍掉上层，仍然可以继续使用下层。例如，符号表可以被用在其他应用中，line holder可以作为一个问答系统的基础部分。层次结构的存在是的我们可以减去树的上层，然后在树干上再开一颗新树。如果我们设计了一个系统，在系统中“底层”模块依赖了上层模块，我们就不具备层次了，我们会发现移除系统中的一部分将非常困难，并且“层次”在系统中也会包含非常杂的信息。<br>可以想象，如果我们可以通过第一种分解方式来构建系统但保持了层次结构，我们必须得出这样的结论层次化结构和”干净”的分解是两种有意义但相互独立的系统属性。    </p>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>我们试图通过这些例子说明，通过流程图来做系统分解几乎总是不正确的。我们建议根据一系列困难或易变的设计决策来做分解。每一个模块都被设计以对其他模块隐藏一个决策。因此，在大多数情况下，设计决策是跨越执行时间的，模块可能不会对应到流程上的步骤。为了得到一种高效的实现，我们必须摒弃这种假设(模块是一个或多个子程序)，取而代之，应该允许程序通过将多个不同模块汇编到一起得到。    </p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="tag"># 架构设计</a>
+              <a href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/" rel="tag"># 软件工程</a>
+              <a href="/tags/%E6%A8%A1%E5%9D%97%E5%8C%96/" rel="tag"># 模块化</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/17/test-series.just-say-no-to-more-e2e-tests/" rel="prev" title="对更多的end-to-end测试Say No">
+      <i class="fa fa-chevron-left"></i> 对更多的end-to-end测试Say No
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/07/09/test-series.dont-mock-types-you-dont-own/" rel="next" title="不要Mock哪些不属于你的类型">
+      不要Mock哪些不属于你的类型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#摘要"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#回顾下该领域的现状"><span class="nav-number">3.</span> <span class="nav-text">回顾下该领域的现状</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模块化编程承诺的优势"><span class="nav-number">4.</span> <span class="nav-text">模块化编程承诺的优势</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是“模块化”"><span class="nav-number">5.</span> <span class="nav-text">什么是“模块化”</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#示例系统1：关键字索引生成系统"><span class="nav-number">6.</span> <span class="nav-text">示例系统1：关键字索引生成系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#模块划分方法一"><span class="nav-number">6.1.</span> <span class="nav-text">模块划分方法一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模块化方法2"><span class="nav-number">6.2.</span> <span class="nav-text">模块化方法2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#比较这两个模块化方法"><span class="nav-number">6.3.</span> <span class="nav-text">比较这两个模块化方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#划分的标准"><span class="nav-number">6.4.</span> <span class="nav-text">划分的标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环移位模块的优化"><span class="nav-number">6.5.</span> <span class="nav-text">循环移位模块的优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#效率和实现"><span class="nav-number">6.6.</span> <span class="nav-text">效率和实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第二个例子：一个MARKOV算法翻译器"><span class="nav-number">7.</span> <span class="nav-text">第二个例子：一个MARKOV算法翻译器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#常规的模块化方式"><span class="nav-number">7.1.</span> <span class="nav-text">常规的模块化方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Interpretor"><span class="nav-number">7.1.1.</span> <span class="nav-text">Interpretor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Compiler："><span class="nav-number">7.1.2.</span> <span class="nav-text">Compiler：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一种替代的搞法"><span class="nav-number">7.2.</span> <span class="nav-text">一种替代的搞法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对于第二个例子的讨论"><span class="nav-number">7.3.</span> <span class="nav-text">对于第二个例子的讨论</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#层次化结构"><span class="nav-number">8.</span> <span class="nav-text">层次化结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结论"><span class="nav-number">9.</span> <span class="nav-text">结论</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : 'ffa4916611c4b09e24abb3189a1838ec',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

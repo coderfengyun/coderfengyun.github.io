@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="这个类真的需要测试吗？12345class UserInfoValidator &amp;#123;  public void validate(UserInfo info) &amp;#123;    if (info.getDateOfBirth().isInFuture()) &amp;#123; throw new ValidationException()); &amp;#125;  &amp;#125;&amp;#125; 乍一看，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="测试接口而不是实现">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/06/test-series.test-interface-not-implementation/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="这个类真的需要测试吗？12345class UserInfoValidator &amp;#123;  public void validate(UserInfo info) &amp;#123;    if (info.getDateOfBirth().isInFuture()) &amp;#123; throw new ValidationException()); &amp;#125;  &amp;#125;&amp;#125; 乍一看，">
+<meta property="article:published_time" content="2021-06-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.304Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta property="article:tag" content="unit_test">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/06/test-series.test-interface-not-implementation/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>测试接口而不是实现 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/06/test-series.test-interface-not-implementation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          测试接口而不是实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-06 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-06T00:00:00+08:00">2021-06-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="这个类真的需要测试吗？"><a href="#这个类真的需要测试吗？" class="headerlink" title="这个类真的需要测试吗？"></a>这个类真的需要测试吗？</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserInfoValidator</span> &#123;</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">validate</span><span class="params">(UserInfo info)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (info.getDateOfBirth().isInFuture()) &#123; <span class="keyword">throw</span> <span class="keyword">new</span> ValidationException()); &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>乍一看，这个类的方法包含了一些逻辑，所以可能最好测试一下。<strong>但是如果唯一的调用者如下所示，又该怎么讲呢？</strong><br><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">public</span> <span class="keyword">class</span> UserInfoService &#123;</span><br><span class="line">  private UserInfoValidator <span class="keyword">validator</span>;</span><br><span class="line">  <span class="built_in">public</span> <span class="type">void</span> save(UserInfo <span class="keyword">info</span>) &#123;</span><br><span class="line">    <span class="keyword">validator</span>.<span class="keyword">validate</span>(<span class="keyword">info</span>); // Throw an <span class="keyword">exception</span> <span class="keyword">if</span> the <span class="keyword">value</span> <span class="keyword">is</span> invalid.</span><br><span class="line">    writeToDatabase(<span class="keyword">info</span>);   </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>答案可能会变成：<strong>UserInfoValidator类可能不需要测试了</strong>，因为所有路径都可以通过UserInfoService被测试到。最重要的分别在于<strong>UserInfoValidator类是实现细节，而不是一个public API。</strong></p>
+<p><strong>一个public API可以被多个用户使用</strong>，这些用户又可能将所有入参的任意组合传给TA的方法。<strong>你想要保证这些组合被完整的测到了</strong>，以防止使用者在使用这些API时碰到问题。public API的代表有：在代码库的另一处被使用的类，以及在整个代码库到处被使用的Utils类等。<br><strong>一个实现细节类存在的价值就是来支撑public APIs</strong>，并且只被极少数调用者使用(大多数情况都只有一个)。<strong>这些类有时可以间接的做测试覆盖</strong>，如何做间接测试覆盖？通过测试调用它的public APIs。<br><strong>测试实现细节类在许多场景下还是有其意义的</strong>，例如，有时这些实现细节类很复杂，亦或是很难通过public APIs测试到。当你确实要测试TA们时，<strong>TA们往往也不需要像public APIs一样的测试深度</strong>，因为有些输入永远也不会被传递给TA们(在上面的代码示例中，如果UserInfoService保证了UserInfo一定不为null，那么就没必要测试UserInfoValidator.validate在info为null时会如何表现了，由于这永远不会发生)。   </p>
+<p>实现细节类有时可以被看成私有方法，只不过恰巧作为一个独立的类存在而已，因为你一定不会想去直接测试私有方法。    </p>
+<p><strong>你也应该尽力控制实现细节类的可见性</strong>，比如在Java中将其设置为包内私有。    </p>
+<p><strong>过度测试实现细节的类容易导致如下问题:</strong>    </p>
+<ul>
+<li><strong>代码更难以维护，因为你需要频繁的修改测试用例</strong>， 比如当改变一个实现细节的类的方法签名，或是做一个简单的重构。如果测试是通过public APIs覆盖的，那么这些变更就完全不会影响到测试用例。   </li>
+<li><strong>如果只通过实现细节类来测试行为，你可能会对代码产生错误的自信</strong>，因为同样的代码路径在public APIs使用时可能并不work。<strong>并且在重构时也要花更多的心思</strong>，因为如果不是所有路径都通过public APIs来测试的，那么很难保证public API的行为在重构中不受影响。</li>
+</ul>
+<h2 id="可能的问题"><a href="#可能的问题" class="headerlink" title="可能的问题"></a>可能的问题</h2><p>Q1: 这是在反对测试金字塔理论，而鼓励更大规模的测试(集成测试，而不是单元测试)吗？<br>A1：个人认为本文与测试金字塔(更专注于小规模测试)并不冲突，因为用pubic APIs的方式依然可以测试代码的一小部分。只不过，用过public APIs来测多个类而不是只测一个类，理应不是什么问题。    </p>
+<p>Q2：一个public方法就是一个public API，与被多少调用者使用无关。整个关于实现细节类的讨论都没什么意义。一个public方法应该被测试，作者错误认知的源头在于，TA看了一眼源码，然后得出这样的结论：  </p>
+<ul>
+<li>[哦，这是实现细节类，我不用测TA了]</li>
+<li>[哦，这个类只被另外一个方法使用了，我可以相应的调整我的测试了]<br>一个待测类应该被作为一个黑盒，不要对其做任何假设，就把它当做潜在的toxic测试。永远不应该去看你要测试的类的源码。只有在你想要修改代码时，才需要去看具体实现。</li>
+</ul>
+<p>A2: 关于一个类应该被作为黑盒测试，本人没有任何异议。但不是所有的类都应该被同等对待。只是因为开发者决定将一些logic放到独立的类里，并不能自然的指向这些逻辑就需要被深度测试了。<br>关于一个类要做什么程度的测试，不决定于TA如何被使用，也不决定于TA的实现：如果一个类只在一个地方使用，且其他地方访问不到TA，那么TA也不是public API。所以这一切与实现无关。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>上述Q2中的问题，实际上极具含金量，短短几句话道出了测试应该怎么做。博文作者对于该说法深表赞同。然而唯一的认知差距在于是否所有独立的类的public方法都需要深度测试，<br>作者认为，可以认为实现细节类在其契约上就清晰的表达，该类不应该被其他人使用。这样Q2就与本文没有冲突了。</p>
+<p>总结一下测试的要点：</p>
+<ul>
+<li>把待测API/系统作为黑盒，只关心其公开的契约，不关心其实现</li>
+<li>过渡关心实现细节，会给后续维护带来较重负担</li>
+<li>测试用例的最佳评价标准是：只要API的语义没变，那么测试用例就可以不变</li>
+</ul>
+<h2 id="参考文献："><a href="#参考文献：" class="headerlink" title="参考文献："></a>参考文献：</h2><p><a href="https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html" target="_blank" rel="noopener">https://testing.googleblog.com/2015/01/testing-on-toilet-prefer-testing-public.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+              <a href="/tags/unit-test/" rel="tag"># unit_test</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/01/25/failure_mode_in_distributed_system/" rel="prev" title="分布式系统中的失败模式">
+      <i class="fa fa-chevron-left"></i> 分布式系统中的失败模式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/06/test-series.test-behavior-not-implementation/" rel="next" title="测试行为而不是实现">
+      测试行为而不是实现 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#这个类真的需要测试吗？"><span class="nav-number">1.</span> <span class="nav-text">这个类真的需要测试吗？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可能的问题"><span class="nav-number">2.</span> <span class="nav-text">可能的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">3.</span> <span class="nav-text">写在最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献："><span class="nav-number">4.</span> <span class="nav-text">参考文献：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '2f2f88acc29ba1167f1dee9a41d5d08b',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

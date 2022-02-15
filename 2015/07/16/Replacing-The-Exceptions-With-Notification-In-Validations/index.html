@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文翻译自Martin Fowler博客，原文地址 如果你要验证一些输入数据，通常不应该选择用Exception的方式来表明验证失败。我想仔细的描述如何使用Notification模式来重构这样的代码。 目录：什么时候使用此项重构 从哪里开始构建一个Notification 分解检验方法验证数字 验证日期*缩减调用栈 我最近正在琢磨一些处理传入Json消息的验证代码。就像下面这个。12345678">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在验证程序输入时使用Notification来替代Exception">
+<meta property="og:url" content="http://coderfengyun.github.io/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="本文翻译自Martin Fowler博客，原文地址 如果你要验证一些输入数据，通常不应该选择用Exception的方式来表明验证失败。我想仔细的描述如何使用Notification模式来重构这样的代码。 目录：什么时候使用此项重构 从哪里开始构建一个Notification 分解检验方法验证数字 验证日期*缩减调用栈 我最近正在琢磨一些处理传入Json消息的验证代码。就像下面这个。12345678">
+<meta property="og:image" content="http://coderfengyun.github.io/images/ReplaceThrowExceptionWithNotification/fromExceptionToNotification.png">
+<meta property="article:published_time" content="2015-07-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.302Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="软件工程">
+<meta property="article:tag" content="重构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/ReplaceThrowExceptionWithNotification/fromExceptionToNotification.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>在验证程序输入时使用Notification来替代Exception | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在验证程序输入时使用Notification来替代Exception
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-07-16 00:00:00" itemprop="dateCreated datePublished" datetime="2015-07-16T00:00:00+08:00">2015-07-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%87%8D%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">重构</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文翻译自Martin Fowler博客，<a href="http://martinfowler.com/articles/replaceThrowWithNotification.html" target="_blank" rel="noopener">原文地址</a></p>
+<p>如果你要验证一些输入数据，通常不应该选择用Exception的方式来表明验证失败。我想仔细的描述如何使用Notification模式来重构这样的代码。</p>
+<p>目录：<br><em>什么时候使用此项重构
+</em>从哪里开始<br><em>构建一个Notification
+</em>分解检验方法<br><em>验证数字
+</em>验证日期<br>*缩减调用栈</p>
+<p>我最近正在琢磨一些处理传入Json消息的验证代码。就像下面这个。<br><figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> void check()&#123;</span><br><span class="line">  <span class="keyword">if</span>(date == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date is missing"</span>);</span><br><span class="line">  LocalDate parsedDate;</span><br><span class="line">  <span class="keyword">try</span>&#123;</span><br><span class="line">    parsedDate = LocalDate.parse(date);</span><br><span class="line">  &#125; <span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(parsedDate.isBefore(LocalDate.now())) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">  <span class="keyword">if</span>(numberOfSeats == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">  <span class="keyword">if</span>(numberOfSeats &lt; <span class="number">1</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">(JAVA代码)</span><br></pre></td></tr></table></figure><br>这是处理数据验证的通用方式。在一些数据上执行一系列的检查。如果任何一个检查失败了，就抛出一个带有错误信息的异常。</p>
+<p>这样的方式存在一些问题。首先，在这样的场景下使用Exception让我不爽。异常表明发生了一些超出程序预期的事情。但是，如果你对外来输入进行了检查，就说明你对一些信息不合法是有预期的。如果这样的失败是可以预期的，那么就不应该使用异常。</p>
+<p>其次，程序只能检测出一个错误，但是最好是能够报告输入参数的所有问题。这样客户端可以将所有的错误都展示给用户，而不是让用户一遍一遍的尝试。</p>
+<p>我比较倾向的报告验证方式是像后文描述的Notification模式。一个Notification收集错误，每个验证失败都会想notification增加一个错误。一个验证方法返回一个Notification，让你可以向用户交付更多信息。一个简单的例子如下。</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">private void validateNumberOfSeats(Notication note)&#123;</span><br><span class="line">  if(numberOfSeats &lt; 1) note.addError(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">  //more<span class="built_in"> check </span>like this</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以用一个简单的调用aNotification.hasErrors()来检查是不是有错误。Notification的其他方法可以包含更多详细的错误信息。</p>
+<p><img src="/images/ReplaceThrowExceptionWithNotification/fromExceptionToNotification.png" alt="代码转变"></p>
+<p>#<strong><em> 何时使用这项重构 </em></strong><br>我需要强调，我不是建议从你的代码中删除所有的Exception。异常是处理异常行为并使之与正常逻辑流分离的好方式。这个重构方式，在一些特征表明异常并非是异常性的时候，才比较合适，因此我们需要在主要的逻辑流中来处理。我上面举的例子，就是一个典型的代表。</p>
+<p>一个《Pragmatic Programmers》提供的比较有用的经验是：<br><strong><em>我们相信异常在程序的正常流程里应该是很少使用的。异常应该表征不可预测的行为。假设一个没被抓住的异常是你的程序崩溃了，那么问问你自己，“如果我去掉了所有的异常处理器，程序还能否运行”，如果答案是NO，那么也许是在不应该使用Exception的地方使用了Exception。                    – David Thomas and Andy Hunt </em></strong></p>
+<p>这样的一个重要结果是是否要使用异常来处理特定的任务是要看所处环境的。所以，就像《Pragmatic Programmers》继续解释的那样，读取文件时如果文件不存在，抛不抛出异常要根据具体情况分析了。如果要读的文件是一个众所周知（默认一定存在，例如unix环境下的/etc/hosts），我们将假设次文件存在，如果此时文件不存在，那么此时抛出异常就是合理的。然而，如果你要读的文件是用户通过command line输入的，那么应该认为这个文件有可能不存在，并应使用其他的机制（而不是异常），一个可以表征这个错误本质上不是异常状况的方式。    </p>
+<p>还有一种情况会比较适合食用异常来验证失败。例如，当使用的数据，在之前的流程已经被验证过，但是想要再次检查以防止衰代码引入脏数据。</p>
+<p>这篇文章是关于在验证（用户）原始输入时，使用Notification替代Exception。有可能在其他场景下，用Notification也比使用Exception更合适，但是我还是专注于这个问题（校验用户的原始输入）。</p>
+<p>#<strong><em> 起点 </em></strong></p>
+<p>到现在还没有给个例子，只是由于我对各种形态的代码都很感兴趣（一时无法取舍）。但是如果我们聊的再深入些，我就必须得对某一种（代码形态）深入探讨了。我想用这样一个例子，即预定电影院座位时的JSON信息的处理。代码是在一个预定请求类中，(这个类）是从JSON中（使用gson）提取出来的。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gson.from<span class="constructor">Json(<span class="params">jsonString</span>, BookingRequest.<span class="params">class</span>)</span></span><br></pre></td></tr></table></figure>
+<p>这个预定请求中，我们需要检查的只有两个域，预定的时间和预定的座位数。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="symbol">BookingRequest</span>&#123;</span><br><span class="line">  <span class="keyword">private</span> Integer numberOfSeats;</span><br><span class="line">  <span class="keyword">private</span> String date;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>验证代码既是向上面展示的那样：<br><figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> void check()&#123;</span><br><span class="line">  <span class="keyword">if</span>(date == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date is missing"</span>);</span><br><span class="line">  LocalDate parsedDate;</span><br><span class="line">  <span class="keyword">try</span>&#123;</span><br><span class="line">    parsedDate = LocalDate.parse(date);</span><br><span class="line">  &#125; <span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(parsedDate.isBefore(LocalDate.now())) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">  <span class="keyword">if</span>(numberOfSeats == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">  <span class="keyword">if</span>(numberOfSeats &lt; <span class="number">1</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">(JAVA代码)</span><br></pre></td></tr></table></figure></p>
+<p>#<strong><em> 构建一个通知 </em></strong><br>为了使用通知，你必须穿件一个通知对象。一个通知可以非常简单，有时候字符串List就可以玩这个把戏。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">List</span>&lt;<span class="built_in">String</span>&gt; notification = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">if</span> (numberOfSeats &lt; <span class="number">5</span>) notification.add(<span class="string">"number of seats too small"</span>);</span><br><span class="line"><span class="comment">// do some more checks</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// then later…</span></span><br><span class="line"><span class="keyword">if</span> ( ! notification.isEmpty()) <span class="comment">// handle the error condition</span></span><br></pre></td></tr></table></figure>
+<p>尽管阿哥简单的List实现了非常轻量的Notification模式，我通常喜欢做的更多些，创建一个简单的类。<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Notification</span> &#123;</span></span><br><span class="line">  <span class="keyword">private</span> List&lt;<span class="keyword">String</span>&gt; errors = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addError</span><span class="params">(<span class="keyword">String</span> message)</span> </span>&#123; errors.add(message); &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasErrors</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ! errors.isEmpty();</span><br><span class="line">  &#125;</span><br><span class="line">  …</span><br></pre></td></tr></table></figure><br>通过使用一个类，可以让我的意图更加明确，（代码的）读者不需要去脑补我的意图和我的实现之间的映射关系。</p>
+<p>#<strong><em> 分解检查方法 </em></strong><br>第一步是将检查方法分解为两个部分，一个内含的部分只会处理通知，并不抛出异常;一个外部部分会维持检查当前检查方法的行为，既是抛出一个异常来表明验证失败。</p>
+<p>第一步，用Extract Method将检查相关(check方法)的逻辑抽离到一个新的validation方法中<br><figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BookingRequest</span>…</span></span><br><span class="line"><span class="class">  <span class="title">public</span> <span class="title">void</span> <span class="title">check</span>() </span>&#123;</span><br><span class="line">    validation();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> void validation() &#123;</span><br><span class="line">    <span class="keyword">if</span> (date == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date is missing"</span>);</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = LocalDate.parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (DateTimeParseException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.isBefore(LocalDate.now())) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats &lt; <span class="number">1</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>接下来，我会把validation的返回值改为返回一个notification。<br><figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BookingRequest</span>…</span></span><br><span class="line"><span class="class">  <span class="title">public</span> <span class="title">Notification</span> <span class="title">validation</span>() </span>&#123;</span><br><span class="line">*** Notification note = <span class="keyword">new</span> <span class="type">Notification</span>();</span><br><span class="line">    <span class="keyword">if</span> (date == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date is missing"</span>);</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = LocalDate.parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (DateTimeParseException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.isBefore(LocalDate.now())) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats &lt; <span class="number">1</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalArgumentException</span>(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">*** <span class="keyword">return</span> note;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>我现在可以检查notification，如果有错误的话，可以抛出一个异常了。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="symbol">BookingRequest</span>…</span><br><span class="line">  <span class="symbol">public</span> <span class="symbol">void</span> <span class="symbol">check</span>() &#123;</span><br><span class="line">*** <span class="keyword">if</span> (validation().hasErrors()) </span><br><span class="line">***   throw new IllegalArgumentException(validation().errorMessage());</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>我把validation方法置为public，因为我希望更多的调用者可以使用这种方式来验证，而不是check方法。</p>
+<p>在这点上，我并没有改变代码的行为，notification不会遗漏任何的错误。但是我已经准备好使用notification来替代异常了。</p>
+<p>在我继续之前，我必须说一些有关错误信息的事。当我们进行一次重构时，原则是避免对可观测的行为产生影响。很明显地，抛出相应的异常是外部程序所观测的行为。但是他们（外部程序）对错误信息关注到什么程度呢？notification会最终将多个错误收集起来，汇总称为一个单独的信息，如下：<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="symbol">Notification</span>…</span><br><span class="line">  <span class="symbol">public</span> <span class="symbol">String</span> <span class="symbol">errorMessage</span>() &#123;</span><br><span class="line">    <span class="keyword">return</span> errors.stream()</span><br><span class="line">      .collect(Collectors.joining(<span class="string">", "</span>));</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是，如果高层程序依赖于“获取第一个错误的信息”，那么就会产生问题。别人没有把这个事搞砸，不代表我不会把他搞砸。</p>
+<p>#<strong><em> 验证数字 </em></strong><br>当前要做的就是把第一个验证替换掉<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">class BookingRequest…</span><br><span class="line">  public Notification validation() &#123;</span><br><span class="line">    Notification<span class="built_in"> note </span>= new Notification();</span><br><span class="line">*** <span class="keyword">if</span> (date == <span class="literal">null</span>) note.addError(<span class="string">"date is missing"</span>);</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    try &#123;</span><br><span class="line">      parsedDate = LocalDate.parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw new IllegalArgumentException(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.isBefore(LocalDate.now())) throw new IllegalArgumentException(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) throw new IllegalArgumentException(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats &lt; 1) throw new IllegalArgumentException(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">    return note;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>一个理所当然的改变，但是并不好，因为改变了代码行为。如果我们将一个null的date传入下面的处理过程，会引起NPE，这并不是我们需要的异常。<br>所以，一个不那么直观，但是更有效的方式是后退一步(即从后向前处理)。<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">class BookingRequest…</span><br><span class="line">  public Notification validation() &#123;</span><br><span class="line">    Notification<span class="built_in"> note </span>= new Notification();</span><br><span class="line">    <span class="keyword">if</span> (date == <span class="literal">null</span>) throw new IllegalArgumentException(<span class="string">"date is missing"</span>);</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    try &#123;</span><br><span class="line">      parsedDate = LocalDate.parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw new IllegalArgumentException(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.isBefore(LocalDate.now())) throw new IllegalArgumentException(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) throw new IllegalArgumentException(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">*** <span class="keyword">if</span> (numberOfSeats &lt; 1) note.addError(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">    return note;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>前面的检查，是一个null的检查，所以我们需要使用条件判断来避免NPE。<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">class BookingRequest…</span><br><span class="line">  public Notification validation() &#123;</span><br><span class="line">    Notification<span class="built_in"> note </span>= new Notification();</span><br><span class="line">    <span class="keyword">if</span> (date == <span class="literal">null</span>) throw new IllegalArgumentException(<span class="string">"date is missing"</span>);</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    try &#123;</span><br><span class="line">      parsedDate = LocalDate.parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw new IllegalArgumentException(<span class="string">"Invalid format for date"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.isBefore(LocalDate.now())) throw new IllegalArgumentException(<span class="string">"date cannot be before today"</span>);</span><br><span class="line">*** <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) note.addError(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">*** <span class="keyword">else</span> <span class="keyword">if</span> (numberOfSeats &lt; 1) note.addError(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">    return note;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们看到下一个价差涉及到了不同的域。我们必须要给之前的重构引入条件判断了，我开始考虑validation方法开始变的太过复杂并且可以对他做一些肢解。所以我把数字验证部分抽离了出来。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BookingRequest…</span><br><span class="line">  public Notification validation<span class="literal">()</span> &#123;</span><br><span class="line">    Notification note = <span class="keyword">new</span> <span class="constructor">Notification()</span>;</span><br><span class="line">    <span class="keyword">if</span> (date<span class="operator"> == </span>null) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date is missing"</span>)</span>;</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = <span class="module-access"><span class="module"><span class="identifier">LocalDate</span>.</span></span>parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"Invalid format for date"</span>, <span class="params">e</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.is<span class="constructor">Before(LocalDate.<span class="params">now</span>()</span>)) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date cannot be before today"</span>)</span>;</span><br><span class="line">*** validate<span class="constructor">NumberOfSeats(<span class="params">note</span>)</span>;</span><br><span class="line">    return note;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> void validate<span class="constructor">NumberOfSeats(Notification <span class="params">note</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats<span class="operator"> == </span>null) note.add<span class="constructor">Error(<span class="string">"number of seats cannot be null"</span>)</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (numberOfSeats &lt; <span class="number">1</span>) note.add<span class="constructor">Error(<span class="string">"number of seats must be positive"</span>)</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>看看抽离出的对数字的验证方法，我并不喜欢这种结构。在验证的时候，我不喜欢用if-then-else块，因为很容易会导致代码杂糅在一起。我选择流畅的短路代码，此时我们可以使用哨兵检测来替代嵌套的判断条件。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="symbol">BookingRequest</span>…</span><br><span class="line">  <span class="symbol">private</span> <span class="symbol">void</span> <span class="symbol">validateNumberOfSeats</span>(<span class="symbol">Notification</span> <span class="symbol">note</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats == <span class="literal">null</span>) &#123;</span><br><span class="line">      note.addError(<span class="string">"number of seats cannot be null"</span>);</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (numberOfSeats &lt; <span class="number">1</span>) note.addError(<span class="string">"number of seats must be positive"</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>我决定从后向前来保证代码能够通过遗留测试，是重构过程中的重要原则。重构是一个特殊的技术，通过一系列行为来改变代码结构的同时保持代码原油的行为。所以当我们重构的时候，我们总是需要保持小步前进，以保持代码原有的行为。通过这样做，我们减少犯错机会，减少debug时间。</p>
+<p>#<strong><em> 验证日期 </em></strong><br>对于日期的验证，我将从提取方法开始：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BookingRequest…</span><br><span class="line">  public Notification validation<span class="literal">()</span> &#123;</span><br><span class="line">    Notification note = <span class="keyword">new</span> <span class="constructor">Notification()</span>;</span><br><span class="line">*** validate<span class="constructor">Date(<span class="params">note</span>)</span>;</span><br><span class="line">    validate<span class="constructor">NumberOfSeats(<span class="params">note</span>)</span>;</span><br><span class="line">    return note;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">***<span class="keyword">private</span> void validate<span class="constructor">Date(Notification <span class="params">note</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (date<span class="operator"> == </span>null) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date is missing"</span>)</span>;</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = <span class="module-access"><span class="module"><span class="identifier">LocalDate</span>.</span></span>parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"Invalid format for date"</span>, <span class="params">e</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.is<span class="constructor">Before(LocalDate.<span class="params">now</span>()</span>)) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date cannot be before today"</span>)</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>现在我们可以开始从后向前验证日期了<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BookingRequest…</span><br><span class="line">  <span class="keyword">private</span> void validate<span class="constructor">Date(Notification <span class="params">note</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (date<span class="operator"> == </span>null) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date is missing"</span>)</span>;</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = <span class="module-access"><span class="module"><span class="identifier">LocalDate</span>.</span></span>parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"Invalid format for date"</span>, <span class="params">e</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">*** <span class="keyword">if</span> (parsedDate.is<span class="constructor">Before(LocalDate.<span class="params">now</span>()</span>)) note.add<span class="constructor">Error(<span class="string">"date cannot be before today"</span>)</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>通过第二步，处理错误的过程有些复杂，由于抛出的异常中包含了引起它的异常。为了出了这个情况，我需要调整notification让它能够处理嵌套的异常(cause exception).由于我处于重构的中间步骤，我的代码还不能通过测试，所以我决定暂且将validateDate方法留在上述状态中，我将去丰富notification以使其支持嵌套的异常。</p>
+<p>我开始修改notification，增加了一个以异常原因为参数的addError方法，并调整原有的方法使其适配。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="symbol">Notification</span>…</span><br><span class="line">  <span class="symbol">public</span> <span class="symbol">void</span> <span class="symbol">addError</span>(<span class="symbol">String</span> <span class="symbol">message</span>) &#123;</span><br><span class="line">    addError(message, <span class="literal">null</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="built_in">void</span> addError(String message, Exception e) &#123;</span><br><span class="line">    errors.add(message);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>这意味着我们接受嵌套异常，并把他忽略了。为了把cause异常纪录下来，我把error记录从一个简单的对象转变成了一个不那么简单的对象。<br><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Notification…</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="built_in">Error</span> &#123;</span><br><span class="line">    <span class="built_in">String</span> message;</span><br><span class="line">    Exception cause;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">Error</span>(<span class="built_in">String</span> message, Exception cause) &#123;</span><br><span class="line">      <span class="keyword">this</span>.message = message;</span><br><span class="line">      <span class="keyword">this</span>.cause = cause;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><br>我通常不喜欢java中出现非private的域，但由于这是一个私有的内部类，我觉得也还行。如果我要把error类暴露出去，我会将这几个域包装一下。<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> List&lt;Error&gt; errors = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addError</span><span class="params">(<span class="keyword">String</span> message, Exception e)</span> </span>&#123;</span><br><span class="line">    errors.add(<span class="keyword">new</span> Error(message, e));</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">String</span> <span class="title">errorMessage</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> errors.stream()</span><br><span class="line">            .<span class="built_in">map</span>(e -&gt; e.message)</span><br><span class="line">            .collect(Collectors.joining(<span class="string">", "</span>));</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过最新的notification，我可以开始改预定请求了。<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BookingRequest…</span><br><span class="line">  <span class="keyword">private</span> void validate<span class="constructor">Date(Notification <span class="params">note</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (date<span class="operator"> == </span>null) throw <span class="keyword">new</span> <span class="constructor">IllegalArgumentException(<span class="string">"date is missing"</span>)</span>;</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = <span class="module-access"><span class="module"><span class="identifier">LocalDate</span>.</span></span>parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      note.add<span class="constructor">Error(<span class="string">"Invalid format for date"</span>, <span class="params">e</span>)</span>;</span><br><span class="line">      return;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.is<span class="constructor">Before(LocalDate.<span class="params">now</span>()</span>)) note.add<span class="constructor">Error(<span class="string">"date cannot be before today"</span>)</span>;</span><br></pre></td></tr></table></figure><br>由于我已经提取了方法，现在做起来就很容易了。<br>最后一步修改也很简单<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> BookingRequest…</span><br><span class="line">  <span class="keyword">private</span> void validate<span class="constructor">Date(Notification <span class="params">note</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (date<span class="operator"> == </span>null) &#123;</span><br><span class="line">      note.add<span class="constructor">Error(<span class="string">"date is missing"</span>)</span>;</span><br><span class="line">      return;</span><br><span class="line">    &#125;</span><br><span class="line">    LocalDate parsedDate;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      parsedDate = <span class="module-access"><span class="module"><span class="identifier">LocalDate</span>.</span></span>parse(date);</span><br><span class="line">    &#125;</span><br><span class="line">    catch (DateTimeParseException e) &#123;</span><br><span class="line">      note.add<span class="constructor">Error(<span class="string">"Invalid format for date"</span>, <span class="params">e</span>)</span>;</span><br><span class="line">      return;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (parsedDate.is<span class="constructor">Before(LocalDate.<span class="params">now</span>()</span>)) note.add<span class="constructor">Error(<span class="string">"date cannot be before today"</span>)</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>#<strong><em> 将工作栈上移 </em></strong><br>一旦我们有了新方法，下一个任务就是查看调用原来check方法的调用方，调整他们，使之可以使用心得validate方法。这意味着更广阔的视野来查看validation方法是否适合应用的流程，那么这就超出了本次重构的范畴。但是中期目标应该是当我们想验证是否失败时，将所有的异常移除。</p>
+<p>许多情况下，本次重构将会完全避免继续使用check方法。所有的验证都应该直接调用validation方法。我们也应该同时调整测试来使用notification。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/" rel="tag"># 软件工程</a>
+              <a href="/tags/%E9%87%8D%E6%9E%84/" rel="tag"># 重构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/06/18/Richard%E6%88%90%E7%86%9F%E5%BA%A6%E6%A8%A1%E5%9E%8B/" rel="prev" title="Richard成熟度模型">
+      <i class="fa fa-chevron-left"></i> Richard成熟度模型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/" rel="next" title="传说中的MySQL 5.6">
+      传说中的MySQL 5.6 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '9adf825b6e52ca19a18b81e0bf4f068a',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

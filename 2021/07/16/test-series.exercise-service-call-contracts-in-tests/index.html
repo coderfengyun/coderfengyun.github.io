@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="下面的测试mock掉了对CloudService服务的调用。这样的测试能够给我们信心，说：对该服务的调用是正常工作的吗？ 1234567891011@Test public void uploadFileToCloudStorage() &amp;#123;  when(mockCloudService.write(          WriteRequest.newBuilder().setUserId">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在测试中验证服务契约">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/07/16/test-series.exercise-service-call-contracts-in-tests/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="下面的测试mock掉了对CloudService服务的调用。这样的测试能够给我们信心，说：对该服务的调用是正常工作的吗？ 1234567891011@Test public void uploadFileToCloudStorage() &amp;#123;  when(mockCloudService.write(          WriteRequest.newBuilder().setUserId">
+<meta property="article:published_time" content="2021-07-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.303Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/07/16/test-series.exercise-service-call-contracts-in-tests/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>在测试中验证服务契约 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/16/test-series.exercise-service-call-contracts-in-tests/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在测试中验证服务契约
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-07-16 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-16T00:00:00+08:00">2021-07-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/TestDouble/" itemprop="url" rel="index"><span itemprop="name">TestDouble</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>下面的测试mock掉了对CloudService服务的调用。这样的测试能够给我们信心，说：对该服务的调用是正常工作的吗？</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Test public void upload<span class="constructor">FileToCloudStorage()</span> &#123;</span><br><span class="line">  <span class="keyword">when</span>(mockCloudService.write(</span><br><span class="line">          <span class="module-access"><span class="module"><span class="identifier">WriteRequest</span>.</span></span><span class="keyword">new</span><span class="constructor">Builder()</span>.set<span class="constructor">UserId(“<span class="params">testuser</span>”)</span>.set<span class="constructor">FileType(“<span class="params">plain</span><span class="operator">/</span><span class="params">text</span>”)</span>...))</span><br><span class="line">    .<span class="keyword">then</span><span class="constructor">Return(WriteResponse.<span class="params">newBuilder</span>()</span>.set<span class="constructor">UploadId(“<span class="params">uploadId</span>”)</span>.build<span class="literal">()</span>);</span><br><span class="line"></span><br><span class="line">  CloudUploader cloudUploader = <span class="keyword">new</span> <span class="constructor">CloudUploader(<span class="params">mockCloudService</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  Uri uri = cloudUploader.upload<span class="constructor">File(<span class="params">new</span> File(“<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>”)</span>);</span><br><span class="line">  <span class="comment">// The uploaded file URI contains the user ID, file type, and upload ID. (Or does it?)</span></span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">That(<span class="params">uri</span>)</span>.is<span class="constructor">EqualTo(<span class="params">new</span> Uri(“<span class="operator">/</span><span class="params">testuser</span><span class="operator">/</span><span class="params">text</span><span class="operator">/</span><span class="params">uploadId</span>.<span class="params">txt</span>”)</span>);</span><br></pre></td></tr></table></figure>
+<p><strong>很多事情可能出错</strong>，尤其是当服务契约变得复杂时。例如，plain/text可能并不是一个有效值，同时也没有办法验证上传文件后生成的URI是正确的。<br><strong>如果待测代码依赖该服务的契约，首选直接调用TA</strong>，而不是把这个调用mock掉。这可以给你给你更多自信，相信自己正确的使用了对应的服务：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Test public void upload<span class="constructor">FileToCloudStorage()</span> &#123;</span><br><span class="line">  CloudUploader cloudUploader = <span class="keyword">new</span> <span class="constructor">CloudUploader(<span class="params">cloudService</span>)</span>;</span><br><span class="line">  Uri uri = cloudUploader.upload<span class="constructor">File(”<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>”)</span>;</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">That(<span class="params">cloudService</span>.<span class="params">retrieveFile</span>(<span class="params">uri</span>)</span>).is<span class="constructor">EqualTo(<span class="params">readContent</span>(“<span class="operator">/</span><span class="params">path</span><span class="operator">/</span><span class="params">to</span><span class="operator">/</span><span class="params">foo</span>.<span class="params">txt</span>)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>你可以如何调用这个服务呢？      </p>
+<ol>
+<li><strong>使用一个Fake</strong>。一个fake是一个快速且轻量的实现，同时TA还表现的与真实服务一致。fake通常由服务的owner提供；不要创建你自己的fake，除非你可以保证fake的行为能够始终与真是实现保持一致。关于fake，参见：testing.googleblog.com/2013/06/testing-on-toilet-fake-your-way-to.html。</li>
+<li><strong>使用一个Hermetic server</strong>。这是一个在测试用例中拉起来的真实服务，并且与测试用例跑在同一台机器上。使用hermetic server的一个问题是，启动它以及与它交互会使测试执行变慢。关于hermetic servers，参考testing.googleblog.com/2012/10/hermetic-servers.html。     </li>
+</ol>
+<p>如果你依赖的服务没有fake或是hermetic server，mock就变成了你唯一的选择。但是如果你的测试用例没有真的验证服务调用契约，你必须使用额外的手段来保证服务调用是没问题的，比如通过一组详尽的end-to-end测试套件，或是依赖手工测试(这是很低效，且很难扩展的)。</p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2018/11/testing-on-toilet-exercise-service-call.html" target="_blank" rel="noopener">https://testing.googleblog.com/2018/11/testing-on-toilet-exercise-service-call.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/16/test-series.web-testing-made-easier-debug-ids/" rel="prev" title="通过ID属性使得Web测试更简单">
+      <i class="fa fa-chevron-left"></i> 通过ID属性使得Web测试更简单
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/07/17/test-series.fake-your-way-to-better-tests/" rel="next" title="用Fake写出更好的测试用例">
+      用Fake写出更好的测试用例 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#翻译自"><span class="nav-number">1.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '6f8d52edc7e13949f53ac28d9894a785',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

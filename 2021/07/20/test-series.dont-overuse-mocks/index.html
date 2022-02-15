@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="当我们在写测试用例时,通过mock来忽略待测代码的依赖看起来是很简单的.12345678910public void testCreditCardIsCharged() &amp;#123;  paymentProcessor &#x3D; new PaymentProcessor(mockCreditCardServer);  when(mockCreditCardServer.isServerAvailable">
+<meta property="og:type" content="article">
+<meta property="og:title" content="不要过度使用mock">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/07/20/test-series.dont-overuse-mocks/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="当我们在写测试用例时,通过mock来忽略待测代码的依赖看起来是很简单的.12345678910public void testCreditCardIsCharged() &amp;#123;  paymentProcessor &#x3D; new PaymentProcessor(mockCreditCardServer);  when(mockCreditCardServer.isServerAvailable">
+<meta property="article:published_time" content="2021-07-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.303Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/07/20/test-series.dont-overuse-mocks/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>不要过度使用mock | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/07/20/test-series.dont-overuse-mocks/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          不要过度使用mock
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-07-20 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-20T00:00:00+08:00">2021-07-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/TestDouble/" itemprop="url" rel="index"><span itemprop="name">TestDouble</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>当我们在写测试用例时,<strong>通过mock来忽略待测代码的依赖看起来是很简单的.</strong><br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">CreditCardIsCharged()</span> &#123;</span><br><span class="line">  paymentProcessor = <span class="keyword">new</span> <span class="constructor">PaymentProcessor(<span class="params">mockCreditCardServer</span>)</span>;</span><br><span class="line">  <span class="keyword">when</span>(mockCreditCardServer.is<span class="constructor">ServerAvailable()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">true</span>)</span>;</span><br><span class="line">  <span class="keyword">when</span>(mockCreditCardServer.<span class="keyword">begin</span><span class="constructor">Transaction()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">mockTransactionManager</span>)</span>;</span><br><span class="line">  <span class="keyword">when</span>(mockTransactionManager.get<span class="constructor">Transaction()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">transaction</span>)</span>;</span><br><span class="line">  <span class="keyword">when</span>(mockCreditCardServer.pay(transaction, creditCard, <span class="number">500</span>)).<span class="keyword">then</span><span class="constructor">Return(<span class="params">mockPayment</span>)</span>;</span><br><span class="line">  <span class="keyword">when</span>(mockPayment.is<span class="constructor">OverMaxBalance()</span>).<span class="keyword">then</span><span class="constructor">Return(<span class="params">false</span>)</span>;</span><br><span class="line">  paymentProcessor.process<span class="constructor">Payment(<span class="params">creditCard</span>, Money.<span class="params">dollars</span>(500)</span>);</span><br><span class="line">  verify(mockCreditCardServer).pay(transaction, creditCard, <span class="number">500</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>然而,<strong>不使用mocks有时会使测试用例更简单,也更有效果.</strong><br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public void test<span class="constructor">CreditCardIsCharged()</span> &#123;</span><br><span class="line">  paymentProcessor = <span class="keyword">new</span> <span class="constructor">PaymentProcessor(<span class="params">creditCardServer</span>)</span>;</span><br><span class="line">  paymentProcessor.process<span class="constructor">Payment(<span class="params">creditCard</span>, Money.<span class="params">dollars</span>(500)</span>);</span><br><span class="line">  <span class="keyword">assert</span><span class="constructor">Equals(500, <span class="params">creditCardServer</span>.<span class="params">getMostRecentCharge</span>(<span class="params">creditCard</span>)</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>过度使用mocks可能会引起诸多问题:</strong>      </p>
+<ul>
+<li><strong>测试变得更加难以维护了.</strong>当你实现mock逻辑的时候,你是在把代码的实现细节漏进测试的代码里.当业务代码中的实现细节变了的时候,你也需要更新测试用例的mock逻辑以反映最新的状态.测试用例应该尽量少了解代码的实现,且应该专注于测试代码的公有接口.</li>
+<li><strong>测试对代码正常工作提供的保证是很少的</strong>.当你告诉你的mock应该如何表现时,获得的唯一保证是:只有在你的mock与真实实现一致时,才能保证线上的代码是经过验证的.这是非常难以保证的事,并且随着时间的推移会变得越来越难,主要是因为真实实现的行为会逐渐与mock不一致.<br>一些迹象可以用以辅助判断”是否过度使用了mock”, 比如当你不只是mock一两个类的时候, 或者是当你的mock需要明确指定”怎么做”而不是”做什么”的时候.     </li>
+</ul>
+<p><strong>如果你尝试阅读一个使用了mock的测试用例时,发现自己不自主的跳进了待测代才能理解测试用例时, 那么你可能就是过度使用mock了</strong><br><strong>有时,你没办法在测试中使用一个真实实现</strong>(比如,太慢或者需要使用网络),<strong>但有比mock更好的选择</strong>,比如hermetic server(比如一个信用卡服务,在本机启动,服务于你的测试)或是一个fake实现(例如一个内存版的信用卡服务).<br>关于hermetic更多的信息,参考<a href="http://googletesting.blogspot.com/2012/10/hermetic-servers.html" target="_blank" rel="noopener">http://googletesting.blogspot.com/2012/10/hermetic-servers.html</a>. </p>
+<h1 id="Great-Q-amp-A"><a href="#Great-Q-amp-A" class="headerlink" title="Great Q&amp;A"></a>Great Q&amp;A</h1><p>Q1: mocks的问题是复制了一遍业务代码逻辑-立刻违反了DRY原则.必须要使用mocks是一种”code smell”, 通常意味着需要重构了.<br>A1: Mocks在不包含逻辑,只是为了让你的代码到达指定状态的时候工作的很好(比如,你对于依赖组件返回的list为空有特殊处理时,你可以使用mock来让依赖组件返回空列表,以保证测试可以覆盖到这样的场景).    <strong>这本质上是stubs.</strong> from coderfengyun   Mocks在测交互的时候也表现很好:<a href="http://googletesting.blogspot.com/2013/03/testing-on-toilet-testing-state-vs.html" target="_blank" rel="noopener">http://googletesting.blogspot.com/2013/03/testing-on-toilet-testing-state-vs.html</a>, <strong>这本质上类似于spy</strong> from coderfengyun</p>
+<p>Q2: 单元测试的要点就是你试图只测试功能的一小部分. 一个单元通常被理解为一个类. 然而, 有时这个类用来与文件,数据库,网络,或其他类打交道, 把这些依赖一股脑拉近测试,会是的单元不再明晰. 用mock来处理与其他系统间的交互,是我理解的对于mock比较好的用法. 有一个场景是无法避免使用mock的: 测试与人交互之后代码的行为. 我最近mock了一个对话框服务, 以使得我可以mock用户选择了’yes’或是’no’. 如果你想要去自动化测试与人的交互相关的,mocking是你唯一的选择.<br>A2: <strong>单元更好的定义是一个独立的类或是一组相关的类</strong>. 如果不这么定义,当你把一些util性质的代码从一个类中重构到一个helper类时, 这个helper类就成为了一个独立的单元, 意味着之前只是实现细节的现在成为了你必须要mock的东西, 这也十分容易导致测试用例难以维护.<br>即使是在用mock来分离独立单元的场景下, mocking有时也会使事情变得极其复杂. 只有在要mock的接口极其简单时,mock才会真正有意义(比如,如果你的代码调用了一个方法,这个方法返回了一个list,你的代码对这个list做了些复杂处理,你可以用mock来返回一个空list,只包含一个元素的list,等等). 但如果有更多更复杂的交互, 需要多个mock来互相操作, 或是需要mock来返回其他mock, 更好的办法是用一个fake, 或是干脆直接用真实实现(如果TA并没有那么的重).      </p>
+<h1 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h1><p><a href="https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html" target="_blank" rel="noopener">https://testing.googleblog.com/2013/05/testing-on-toilet-dont-overuse-mocks.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/17/test-series.fake-your-way-to-better-tests/" rel="prev" title="用Fake写出更好的测试用例">
+      <i class="fa fa-chevron-left"></i> 用Fake写出更好的测试用例
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/07/23/test-series.effective-testing/" rel="next" title="如何定义测试用例的效率/质量">
+      如何定义测试用例的效率/质量 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Great-Q-amp-A"><span class="nav-number">1.</span> <span class="nav-text">Great Q&amp;A</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#翻译自"><span class="nav-number">2.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '8f1a374bc769ce20a652f81314f86f3d',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

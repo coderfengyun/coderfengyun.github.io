@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="一切都从一颗小树苗开始。小树苗逐渐成长为树干，在其上又长出了许多新芽，在不知不觉间又长成了一颗茂密的参天大树.在数字世界中也存在着这样一棵树，被称为Merkle Tree. Merkle Tree主要由根，中间节点，叶子结点组成。一棵树可以有大量的叶子结点，但叶节点不再拥有子节点。Merkle Tree用来解决什么问题呢？我们一起看看。      The Basics一颗Merkle Tree是一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于Merkle Tree你需要了解的一切">
+<meta property="og:url" content="http://coderfengyun.github.io/2022/02/07/everything-you-should-know-about-merkle-trees/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="一切都从一颗小树苗开始。小树苗逐渐成长为树干，在其上又长出了许多新芽，在不知不觉间又长成了一颗茂密的参天大树.在数字世界中也存在着这样一棵树，被称为Merkle Tree. Merkle Tree主要由根，中间节点，叶子结点组成。一棵树可以有大量的叶子结点，但叶节点不再拥有子节点。Merkle Tree用来解决什么问题呢？我们一起看看。      The Basics一颗Merkle Tree是一">
+<meta property="og:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/single-node.png">
+<meta property="og:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/two_leaf_nodes.png">
+<meta property="og:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/three_leaf_nodes.png">
+<meta property="og:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/four_leaf_nodes.png">
+<meta property="og:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/seven_leaf_nodes.png">
+<meta property="article:published_time" content="2022-02-06T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-09T11:23:12.257Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/2022/02/07/images/everything-you-need-to-know-about-merkle-tree/single-node.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2022/02/07/everything-you-should-know-about-merkle-trees/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>关于Merkle Tree你需要了解的一切 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2022/02/07/everything-you-should-know-about-merkle-trees/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          关于Merkle Tree你需要了解的一切
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-02-07 00:00:00" itemprop="dateCreated datePublished" datetime="2022-02-07T00:00:00+08:00">2022-02-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-09 19:23:12" itemprop="dateModified" datetime="2022-02-09T19:23:12+08:00">2022-02-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">数据结构</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>一切都从一颗小树苗开始。小树苗逐渐成长为树干，在其上又长出了许多新芽，在不知不觉间又长成了一颗茂密的参天大树.<br>在数字世界中也存在着这样一棵树，被称为Merkle Tree. Merkle Tree主要由根，中间节点，叶子结点组成。一棵树可以有大量的叶子结点，但叶节点不再拥有子节点。Merkle Tree用来解决什么问题呢？我们一起看看。     </p>
+<h1 id="The-Basics"><a href="#The-Basics" class="headerlink" title="The Basics"></a>The Basics</h1><p>一颗Merkle Tree是一个非线性，二叉，基于哈希的树状数据结构。每个叶子节点存储数据的hash值，每个中间节点存储两个子节点hash的hash.使用Merkle Tree的主要优势是数据元素(或整个数据集)的许多重要信息可被验证,而无需访问整个数据集。例如，在无需下载整个数据集的前提下，可以验证一个特定的数据元素是否是一个大数据集的一部分. 由于这些特性，Merkle Tree经常被使用在区块链等基于P2P网络构建并经常会涉及从非信任源获取数据的业态中，因此数据在获取的同时也得到了了验证. 有了Merkle Tree之后，可以避免这样的场景，即在下载完整个数据集之后，发现数据是不可验证的，因而节省了大量的时间与带宽。<br>区块链平台的场景下，总体来说，用户只需要同步哪些与自己账号相关的数据和事务信息。如果用户想要下载全量数据，效率则会大打折扣。因此，区块链实现了一种被称之为SPV(Simple Pay Verification)的技术。使用这项验证技术，用户可以在只需要极小量数据的前提下构建和验证Merkle Proof。这直接导致对于终端用户只需要极小的存储和带宽需求。<br>Merkle Tree拥有着丰富的应用场景。其中之一便是生成区块Merkle Tree，其中区块中的transaction是叶子节点。这些记录被用做这些事务确实曾发生在区块链上的证明。这篇文章主要目标是描述Ontology在实现Merkle Tree时是如何做了各种优化的。     </p>
+<h1 id="Merkle-Tree数据结构存储"><a href="#Merkle-Tree数据结构存储" class="headerlink" title="Merkle Tree数据结构存储"></a>Merkle Tree数据结构存储</h1><p>大部分区块链为不同区块实现以transaction hash为叶子节点的Merkle Tree。然而在Ontology区块链的场景下，随着区块数量的增加区块Merkle Tree在不断地被动态修改，导致了一个比传统范式更复杂的场景。这自然提出了一个问题：如何存储Merkle Tree？让我们看看这个问题的不同答案。      </p>
+<h1 id="方案一：Cache-Storage"><a href="#方案一：Cache-Storage" class="headerlink" title="方案一：Cache Storage"></a>方案一：Cache Storage</h1><p><strong>这个方案主要是缓存Merkle Tree.</strong> 但有两个明确的缺点。第一，缓存意味着树被存储在易失性内存里，当机器关机或重启时，需要重新扫描以构建完整的Merkle Tree，这是一个想对耗时的过程。同时，随着区块高度的增加，树也在不断变大。因此，内存需求在线性增加，这极大影响了扩展性。因此，我们可以很明确地说缓存不是一个长期的最优解。     </p>
+<h1 id="方案二：KV数据库存储"><a href="#方案二：KV数据库存储" class="headerlink" title="方案二：KV数据库存储"></a>方案二：KV数据库存储</h1><p><strong>这个方案主要涉及将Merkle Tree存储在KV数据库中（如LevelDB）.</strong> 由于KV的简单性，将树状结构序列化/反序列化为KV的表达方式，是一个绕不开的问题。同时，获取树中一个具体节点需要多次读取操作，这无疑降低了系统的整体效率。     </p>
+<h1 id="方案三：文件存储"><a href="#方案三：文件存储" class="headerlink" title="方案三：文件存储"></a>方案三：文件存储</h1><p>由于Merkle Tree的节点都是定长的hash值，如果我们将hash值与整数形成一个1-1映射，就有可能将整棵树压缩为一个整型数组。对应的整型值先被计算出来，然后将对应节点数据存储在以该整型值为下标的数组元素中。当访问一个具体节点时，先计算出该整型数值，再直接访问该整型值为下标的数组元素。将这个数组存储在文件中可以解决Merkle Tree线性增长的问题。<br>有许多种将节点映射为整型的方法，最为直接的是基于树深度的逐层序列化。但，这种序列化方式有一个问题。即每次树的大小变化时，一个节点的序列号也会变化。因此，整个数据都需要被解析，序列化，再重新存储。这会极大的影响系统的运行效率。因此，文件存储方案的稳定性极大地依赖于找到一种高效的序列化方法。     </p>
+<h1 id="Merkle-Tree更新和节点序列化Schemes"><a href="#Merkle-Tree更新和节点序列化Schemes" class="headerlink" title="Merkle Tree更新和节点序列化Schemes"></a>Merkle Tree更新和节点序列化Schemes</h1><p>除了节点序列化，使用文件存储还存在着其他问题。随着区块不断的增加，Merkle Tree的节点被不断修改，因此文件也许不断的更新和重写。这是另一个会导致效率快速降低的因素。<br>再增加一点难度，可能还需要一个数据一致性的处理机制。考虑这样一个假想的但一定会频繁出现的场景，节点数据被更新了，更新过程处理了一半，突然一个新的区块产生了。这会导致Merkle tree数据文件的不一致。<br>如果你仔细观察Merkle Tree的插入过程，Merkle Tree中存在着两种节点：临时节点，它的节点hash会随着新节点的插入而变化；稳定节点，那些不会因新节点插入而变化的节点。很容易总结出，一个节点成为稳定节点的前提是它及其子孙节点已经构成了一个完全二叉树。同时，非常明确的是临时节点的数量也是有限的(只有log(n))。临时节点数量可以由稳定节点数量退推导得出，在出入内存之后，会随着新节点的插入而变化。<br>因此，在Ontology的方案中，只有稳定节点被写进文件中。另一个有趣的巧合是未定节点形成的序列本身是一个稳定的序列化顺序。考虑上面提到的事实，只有一种动作会发生在文件上，那就是append。同时这解决了因重写文件可能会带来的数据一致性问题。     </p>
+<h1 id="Merkle-Tree的压缩形式"><a href="#Merkle-Tree的压缩形式" class="headerlink" title="Merkle Tree的压缩形式"></a>Merkle Tree的压缩形式</h1><p>由稳定节点性质，可以推出稳定节点的字节点对于Merkle Tree的更新过程不会有任何参与度。因此，对于那些不需要提供证明服务，并且只需要计算最新的Merkle Tree根节点hash值的参与者来说，可以只简单地存储完整Merkle Tree的log(n)数量级的节点数据。这就足以表达整颗Merkle Tree的状态了，因此将需要存储的节点数量缩小到了log(n)级别，这使得可以很方便的用LevelDB的一个Key来存储这些节点。更新Merkle Tree将只需要一次读写操作。数据结构定义如下：<br><figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">CompactMerkleTree</span> struct &#123;</span><br><span class="line">  hashes []common.<span class="type">Uint256</span></span><br><span class="line">  treeSize uint32</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="计算Merkle-Tree的根Hash"><a href="#计算Merkle-Tree的根Hash" class="headerlink" title="计算Merkle Tree的根Hash"></a>计算Merkle Tree的根Hash</h1><p>从压缩后的Merkle Tree的定义可以很容易发现，为了获得Merkle tree的根节点hash，存储的不稳定节点的hash array需要从后向前不断解析。算法如下：<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(self *CompactMerkleTree)</span> <span class="title">Root</span><span class="params">()</span> <span class="title">common</span>.<span class="title">Uint256</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">len</span>(self.hashes) == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> empty_hash();</span><br><span class="line">  &#125;</span><br><span class="line">  hashes = self.hashes;</span><br><span class="line">  l := <span class="built_in">len</span>(hashes);</span><br><span class="line">  accum = hashes[l<span class="number">-1</span>]; <span class="comment">//从最后一个节点(会参与root hash计算的)开始</span></span><br><span class="line">  <span class="keyword">for</span> i:=l - <span class="number">2</span>; i &gt;= <span class="number">0</span>; i-- &#123; <span class="comment">//从后向前，即使需要计算root hash的顺序，后面的图示中将明确阐释</span></span><br><span class="line">    accum = hash_children(hashes[i], accum); <span class="comment">//计算子节点hash的hash</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> accum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这里的empty_hash返回空hashes, hash_children方法将两个子节点hash计算成为父节点hash.</p>
+<h1 id="插入新的叶子节点"><a href="#插入新的叶子节点" class="headerlink" title="插入新的叶子节点"></a>插入新的叶子节点</h1><p>当新的叶子节点插入时，动态更新依据当前Merkle Tree的状态被执行。具体的算法如下：<br><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(<span class="keyword">self</span> *CompactMerkleTree)</span></span> <span class="type">Appen</span>(leaf common.<span class="type">Uint256</span>) &#123;</span><br><span class="line">  size := len(<span class="keyword">self</span>.hashes);</span><br><span class="line">  <span class="keyword">for</span> s := <span class="keyword">self</span>.treeSize; s%<span class="number">2</span> == <span class="number">1</span>; s = s &gt;&gt; <span class="number">1</span> &#123; <span class="comment">//终止条件是再向前都是完全二叉树了(只有有单数才是非完全)；s&gt;&gt;1，每次向上移动一层;</span></span><br><span class="line">    leaf = hash_children(selft.hashes[s - <span class="number">1</span>], leaf); <span class="comment">//根据新叶子和上一层的左侧兄弟节点计算hash.</span></span><br><span class="line">    size -= <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">self</span>.treeSize += <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">self</span>.hashes = <span class="keyword">self</span>.hashes[<span class="number">0</span>:szie];</span><br><span class="line">  <span class="keyword">self</span>.hashes = append(<span class="keyword">self</span>.hashes, leaf);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>#随着Merkle Tree不断增长,数据变化的示意图<br>在hash values以及存储文件中压缩存储的数据随Merkle Tree增长而变化的情况展示如下：</p>
+<h3 id="第一张图是Merkle-Tree只有单一节点的情况"><a href="#第一张图是Merkle-Tree只有单一节点的情况" class="headerlink" title="第一张图是Merkle Tree只有单一节点的情况"></a>第一张图是Merkle Tree只有单一节点的情况</h3><p><img src="../images/everything-you-need-to-know-about-merkle-tree/single-node.png" alt="单节点"></p>
+<h3 id="当一个新节点b插入Merkle-Tree时，size会-1-新节点b可以用来与a一起计算出hash值c"><a href="#当一个新节点b插入Merkle-Tree时，size会-1-新节点b可以用来与a一起计算出hash值c" class="headerlink" title="当一个新节点b插入Merkle Tree时，size会+1. 新节点b可以用来与a一起计算出hash值c."></a>当一个新节点b插入Merkle Tree时，size会+1. 新节点b可以用来与a一起计算出hash值c.</h3><p><img src="../images/everything-you-need-to-know-about-merkle-tree/two_leaf_nodes.png" alt="两个页节点"></p>
+<h3 id="当一个新节点d插入时，由于当前树是完全二叉树-该节点独立成为一个新子树-树的size加1"><a href="#当一个新节点d插入时，由于当前树是完全二叉树-该节点独立成为一个新子树-树的size加1" class="headerlink" title="当一个新节点d插入时，由于当前树是完全二叉树, 该节点独立成为一个新子树. 树的size加1"></a>当一个新节点d插入时，由于当前树是完全二叉树, 该节点独立成为一个新子树. 树的size加1</h3><p><img src="../images/everything-you-need-to-know-about-merkle-tree/three_leaf_nodes.png" alt="三个叶子节点"></p>
+<p>此时，每次有一个新节点插入时，我们都可以通过之前讨论过的算法得到对应的位置和hash值。</p>
+<p><img src="../images/everything-you-need-to-know-about-merkle-tree/four_leaf_nodes.png" alt="四个叶子节点"></p>
+<p><img src="../images/everything-you-need-to-know-about-merkle-tree/seven_leaf_nodes.png" alt="七个叶子节点"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Merkle Tree在不同的场景中存在着广泛的应用。在Ontology的场景下，Merkle Tree的一个应用是以叶节点的形式记录每个区块，然后为transactions是否在链上发生过以及是否是这些区块的一部分提供证明。<br>对于那些不需要提供证明的场景, Merkle Tree可以显著的提升共识节点的性能和存储效率。Ontoloty在实现Merkle Tree时只记录了关键节点。其效果是，我们可以仅通过一次LevelDB读写更新Merkle Tree。时间复杂度被减小到O(logn).<br>更进一步，当需要提供证明服务时，本文提到的方案可以解决存储文件需要频繁重写的问题，并通过使文件操作只有append一种来简化一致性负担。     </p>
+<h1 id="文章翻译子"><a href="#文章翻译子" class="headerlink" title="文章翻译子"></a>文章翻译子</h1><p><a href="https://medium.com/ontologynetwork/everything-you-need-to-know-about-merkle-trees-82b47da0634a" target="_blank" rel="noopener">https://medium.com/ontologynetwork/everything-you-need-to-know-about-merkle-trees-82b47da0634a</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%8C%BA%E5%9D%97%E9%93%BE/" rel="tag"># 区块链</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/19/test-series.what-makes-a-good-test/" rel="prev" title="怎样才能称之为“好”的测试用例">
+      <i class="fa fa-chevron-left"></i> 怎样才能称之为“好”的测试用例
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#The-Basics"><span class="nav-number">1.</span> <span class="nav-text">The Basics</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Merkle-Tree数据结构存储"><span class="nav-number">2.</span> <span class="nav-text">Merkle Tree数据结构存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案一：Cache-Storage"><span class="nav-number">3.</span> <span class="nav-text">方案一：Cache Storage</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案二：KV数据库存储"><span class="nav-number">4.</span> <span class="nav-text">方案二：KV数据库存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案三：文件存储"><span class="nav-number">5.</span> <span class="nav-text">方案三：文件存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Merkle-Tree更新和节点序列化Schemes"><span class="nav-number">6.</span> <span class="nav-text">Merkle Tree更新和节点序列化Schemes</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Merkle-Tree的压缩形式"><span class="nav-number">7.</span> <span class="nav-text">Merkle Tree的压缩形式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#计算Merkle-Tree的根Hash"><span class="nav-number">8.</span> <span class="nav-text">计算Merkle Tree的根Hash</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#插入新的叶子节点"><span class="nav-number">9.</span> <span class="nav-text">插入新的叶子节点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一张图是Merkle-Tree只有单一节点的情况"><span class="nav-number">9.0.1.</span> <span class="nav-text">第一张图是Merkle Tree只有单一节点的情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#当一个新节点b插入Merkle-Tree时，size会-1-新节点b可以用来与a一起计算出hash值c"><span class="nav-number">9.0.2.</span> <span class="nav-text">当一个新节点b插入Merkle Tree时，size会+1. 新节点b可以用来与a一起计算出hash值c.</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#当一个新节点d插入时，由于当前树是完全二叉树-该节点独立成为一个新子树-树的size加1"><span class="nav-number">9.0.3.</span> <span class="nav-text">当一个新节点d插入时，由于当前树是完全二叉树, 该节点独立成为一个新子树. 树的size加1</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文章翻译子"><span class="nav-number">11.</span> <span class="nav-text">文章翻译子</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : 'a0e6bbe380f2a58edd399ccee8cebcdb',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

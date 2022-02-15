@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="从哪说起，先从MySQL的官方文档说起。 当MySQL 5.5在全世界范围内广泛部署与使用之后，架构师们都在翘首以盼，期待着MySQL 5.6的将临。MySQL 5.6在MySQL 5.5的基础上开发完成。 今年MySQL的会议上，会听到如下的主题：  优化器全面提高性能 InnoDB提高事务吞吐 全新的NoSQL memcached APIs 查询和超大表分区优化 replication多方面提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="传说中的MySQL 5.6">
+<meta property="og:url" content="http://coderfengyun.github.io/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="从哪说起，先从MySQL的官方文档说起。 当MySQL 5.5在全世界范围内广泛部署与使用之后，架构师们都在翘首以盼，期待着MySQL 5.6的将临。MySQL 5.6在MySQL 5.5的基础上开发完成。 今年MySQL的会议上，会听到如下的主题：  优化器全面提高性能 InnoDB提高事务吞吐 全新的NoSQL memcached APIs 查询和超大表分区优化 replication多方面提">
+<meta property="article:published_time" content="2015-12-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.305Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="存储系统">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>传说中的MySQL 5.6 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2015/12/16/%E4%BC%A0%E8%AF%B4%E4%B8%AD%E7%9A%84mysql5.6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          传说中的MySQL 5.6
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2015-12-16 00:00:00" itemprop="dateCreated datePublished" datetime="2015-12-16T00:00:00+08:00">2015-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">存储系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从哪说起，先从MySQL的官方文档说起。</p>
+<p>当MySQL 5.5在全世界范围内广泛部署与使用之后，架构师们都在翘首以盼，期待着MySQL 5.6的将临。MySQL 5.6在MySQL 5.5的基础上开发完成。</p>
+<p>今年MySQL的会议上，会听到如下的主题：</p>
+<ul>
+<li>优化器全面提高性能</li>
+<li>InnoDB提高事务吞吐</li>
+<li>全新的NoSQL memcached APIs</li>
+<li>查询和超大表分区优化</li>
+<li>replication多方面提高</li>
+<li>PERFORMANCE_SCHEMA 提供了更多的性能监控数据</li>
+</ul>
+<p>注1：MySQL的实现分为两层，即服务器层（后文简称为server）和存储引擎层（storage engine）<br>注2：MySQL的索引遍历是在存储引擎层实现。</p>
+<p>##<strong><em> 优化器全面提高性能 </em></strong></p>
+<p>###<strong> 索引条件下推到存储引擎</strong><br>将where子句中的处理更多的转移到存储引擎处理。相比取出完整行后再使用where子句评估，ICP(Index Condition Push-down)将这些where子句发送到存储引擎，这样存储引擎可以根据索引组(index tupples)来修剪结果集。从而，降低了对主索引的IO开销，降低了server与存储引擎之间的传输开销。这项特点在innodb，MyISAM，NDCluster引擎上都有实现。</p>
+<p>ICP是一项优化，在MySQL从一个有索引的表取数据时生效。没有ICP，存储引擎将会根据索引来定位所需要的行，然后把这些行完整返回给server，在server出对这些行验证where子句（where子句部分，如果验证不通过，将会把这些行丢弃）。一旦启用了ICP，如果where子句中有一部分条件可以只使用了索引中的列，（MySQL）server将会把这一部分（只涉及索引部分的where子句）下推到存储引擎层。存储引擎将会根据索引中的数据来判定这些下推的where子句，只有（index中的数据）满足这些（下推的）条件时才会从主表中真正读取这些行。ICP可以减少存储引擎访问主表的次数，同时还可以减少MySQL Server访问存储引擎的次数。</p>
+<p>当需要访问整个行的完整数据是，ICP优化对于range，ref，eq_ref和ref_or_null等访问方式有效。这种策略对于InnoDB和MyISAM类型的表都有效。（注意：在MySQL 5.6中的partitioned 表不支持ICP.）对于InnoDB表来说，ICP只对二级索引（非主键索引）有效。ICP的目标是检索整行扫描读的数量，以此减少IO操作。对于InnoDB聚合索引来说，整行记录已经被读入InnoDB的缓存中。在这种情况下，使用ICP起不到减少IO的作用。</p>
+<p>为了看出这项优化是怎么工作的，首先考虑一下在没有ICP时，索引扫描是怎样进行的。</p>
+<ol>
+<li>得到下一行：首先，读取索引中的下一个元组，然后使用该元组到主表中定位和读取整行数据。</li>
+<li>验证where子句中（应用在该表上）的条件，根据验证结果决定接受或者拒绝改行。</li>
+</ol>
+<p>当启用了ICP时，索引扫描的过程会是这样：</p>
+<ol>
+<li>获取索引中的下一个元组（而不是获取整行数据）。</li>
+<li>验证where子句中（应用在该表上）的条件中的一部分（可以用该索引判定的部分），如果条件不满足，继续验证索引中的下一个元组。</li>
+<li>如果条件满足了，使用该索引元组来定位和读取完整行记录。</li>
+<li>验证where字句中（应用在该表上）的剩余部分，根据验证结果接受或者拒绝改行。</li>
+</ol>
+<p>当ICP被启用时，Explain中的Extra列中将展示”Using index condition”. 它不会显示”Index only”，因为当完整行记录必须被读取（不管是判断where条件还是返回select需要数据）时就不是只使用Index了。</p>
+<p>假设，我们有一张表包含了人和他们的地址，并且该表拥有一个索引index(zipcode, lastname, firstname). 如果我们知道一个人的zipcode值，但是并不确定他的姓，我们可以这样查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> people</span><br><span class="line">  <span class="keyword">WHERE</span> zipcode=<span class="string">'95054'</span></span><br><span class="line">  <span class="keyword">AND</span> lastname <span class="keyword">LIKE</span> <span class="string">'%etrunia%'</span></span><br><span class="line">  <span class="keyword">AND</span> address <span class="keyword">LIKE</span> <span class="string">'%Main Street%'</span></span><br></pre></td></tr></table></figure>
+<p>MySQL可以根据zipcode=’95054’使用索引扫描people表。而index中剩余的部分(lastname like ‘%etrunia%’)不能被用来限制需要扫描的行数，所以没有ICP，这条查询将必须取得所有满足zipcode=’95054’完整行记录。</p>
+<p>如果启用了ICP，MySQL将会在读取完整行记录之前检查(lastname like ‘%etrunia%’)。这样就避免了对于不满足lastname条件的行的完整行记录扫描。</p>
+<p>ICP默认打开；可以使用optimizer_switch系统变量来设置index_condition_pushdown参数。</p>
+<p>###<strong> 多范围读(Multi-Range Read，MRR) </strong><br>直到你有足够的SSD之前，从磁盘中顺序读都会比随机读要快。对于二级索引（非主键索引），硬盘上索引条目的顺序和完整行记录所在的硬盘块的顺序是不一致的。与其是通过一些列无序的读磁盘来获取完整的行记录，MRR扫描一个查询中的一个或多个索引范围，然后所得的索引元组按照相应的完整行数据所在的磁盘块排序。然后使用更大的顺序IO的请求读取这些磁盘块。这项优化对范围索引扫描以及在索引列上的equi-join有效。（考虑InnoDB外键。）对于所有的存储引擎都有效。</p>
+<p>通过在二级索引上的范围扫描来读取数据，当主表很大并且没有在存储引擎的缓存中时，会造成对主表大量的随即磁盘读。通过磁盘块交换MMR优化，MySQL试图减少范围扫描造成的随机磁盘读取次数，主要通过首先只扫描索引，然后手机相关行的键（主键？）。随后这些键被排序，最后这些完整行记录按照主键的顺序被读取出来。MRR的主要目的是减少硬盘随机读，代之以更顺序的方式扫描基表。</p>
+<p>MRR读优化提供了一下好处：</p>
+<ol>
+<li>MRR使得数据行可以被顺序读取而不是按照索引顺序随机读取。server获取了满足查询条件的索引元组，按照行数据ID（主键）的顺序排序，然后使用这些排序后的元组来顺序的获取数据。这使得获取数据更加的有效和低耗。</li>
+<li>MRR使得可以对需要访问索引并通过索引元组来访问完整行记录的请求进行批量处理。MRR遍历一系列的索引范围来获取满足条件的索引元组(类似于tcp拥塞控制中，把较小的包累计后一起发送)。不断的收集索引元组，当累积到一定量时，（这些元组）用来到主表中读取数据行。</li>
+</ol>
+<p>在以下的场景中，应用MRR优化可能会带来利好</p>
+<p>####Senario A: MRR可以被用于InnoDB和MyISAM表的索引范围查询和equi-join操作。</p>
+<ol>
+<li>一部分的索引元组在缓存中累积。</li>
+<li>缓存中的元组按照ID排序。</li>
+<li>按照拍好序的顺序访问主表中的数据行。</li>
+</ol>
+<p>####Senario B: MRR可以被用于NDB表，用于多范围索引扫描以及通过一个属性进行equi-join</p>
+<ol>
+<li>一部分的多个范围索引的元组，或是单个索引范围的元组，当查询提交时，在中心节点的缓存中累积。</li>
+<li>这些范围被发送到执行节点上用以访问数据行。</li>
+<li>这些被访问的行被打成协议包，回传给中央节点。</li>
+<li>（中心节点）接收到包含数据行的协议包后，把它们放在缓存中。</li>
+<li>数据被从缓存中读取。</li>
+</ol>
+<p>当MRR被使用时，当MRR被使用时，EXPLAIN的Extra列将展示<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Using MRR</span><br></pre></td></tr></table></figure><br>当查询结果不需要整行数据时，InnoDB和MyISAM不会使用MRR。原因是，有可能索引中信息足够用来构造查询结果（即覆盖索引），在这样的情况下，MRR没有任何增益。</p>
+<h5 id="栗子"><a href="#栗子" class="headerlink" title="栗子"></a>栗子</h5><p>在下面的栗子中，MRR会被使用（假设有一个索引INDEX(key_part1, key_part2)）</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t</span><br><span class="line">   <span class="keyword">WHERE</span> key_part1 &gt;= <span class="number">1000</span> <span class="keyword">AND</span> key_part1 &lt; <span class="number">2000</span></span><br><span class="line">   <span class="keyword">AND</span> key_part2 = <span class="number">10000</span>;</span><br></pre></td></tr></table></figure>
+<p>索引中包含(key_part1, key_part2)元组的值，按照”首先按照key_part1排序，再按照key_part2排序”的规则排序。</p>
+<p>如果没有MRR，一次索引扫描将覆盖所有的keypart1从1000到2000的元组，不管key_part2在这些元组中的值是不是10000<a href="个人对这个解释存疑。">^footnote1</a>。这样的扫描出的元组中key_part2的值不一定是10000。</p>
+<p>如果启用了MRR，扫描会被分解成多个范围，每个范围包含key_part1单个的一个值。每个这样的扫描都只需过滤处理那些key_part2的值为10000的元组。MRR使得索引扫描的元组数量大大减少。</p>
+<p>用范围标记表示（不使用MRR的查询），不使用MRR的扫描必须要验证这样的索引区间[{1000, 10000}, {2000, INT_MIN}][^footnote2]。这样扫描结果可能会包含许多key_part2不为10000的元组。<br>然而MRR扫描，则验证多个单点区间[{1000, 10000}], [{1001, 10000}]…, [{2000, 10000}]，这样扫描得到的索引元组将只包含key_part2=10000的部分。</p>
+<p>两个optimizer_switch系统变量标志为可以提供接口来使用MRR优化。mrr标志位控制MRR是否启用。如果mrr被启用了（on），mrr_cost_based标志位将控制优化其是否要根据开销来选择使用使用MRR(ON)，<br>还是只要能使用MRR就是用它（OFF）。mrr，mrr_cost_based都是默认打开的（on）。</p>
+<p>对于MRR，存储引擎使用read_rnd_buffer_size系统变量的值作为能够申请多少内存(用于MRR)的指导值。引擎将根据read_rnd_buffer_size来决定将单次处理分割成多少个range。</p>
+<p>##…未完待续</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<p><strong> 文件排序优化（File Sort Optimization, FSO） </strong><br>对于组合了ORDER BY non_index_column(无索引列) 与LIMIT x的查询，本特性，在X列的内容可以被装入排序buffer中时，会加速排序。对于所有的存储引擎都生效。</p>
+<p><strong> Innodb优化 </strong><br>MySQL 5.6以innodb作为默认的存储引擎，从MySQL 5.5开始就是这样。</p>
+<p><strong><em> 存储优化器状态</em></strong><br>提供了更精确的InnoDB索引统计，并且在MySQL重启之后不会消失。InnoDB提前通过对索引的一部分进行采样计算统计，这些统计会帮助优化器决定在一个查询中要选择使用哪个索引。这些统计在MySQL重启后不会丢失。而不是在重启或发生一些运行中事件时重新计算。更加准确的统计会提高查询性能，并且存储方面会保持查询性能的稳定。这项特性被innodb_analyze_is_persistent, innodb_stat_persistent_sample_pages以及innodb_stats_transient_sample_pages等配置项控制。当这项存储状态特性被激活，这些统计信息只会在明确的对表调用ANALYZE_TABLEi。</p>
+<h1 id="新的INFOMATION-SCHEMA表"><a href="#新的INFOMATION-SCHEMA表" class="headerlink" title=" 新的INFOMATION_SCHEMA表"></a><strong><em> 新的INFOMATION_SCHEMA表</em></strong></h1><p>[^footnote2]: 原因是在SQL的比较中组合索引的比较逻辑先以第一个key为主，然后在比较第二个，依次类推。例如{1001, 0} &gt; {1000, 10000}</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>05540260346b54dcac9d41b4fac10bab58d0e736</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/" rel="tag"># 存储系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2015/07/16/Replacing-The-Exceptions-With-Notification-In-Validations/" rel="prev" title="在验证程序输入时使用Notification来替代Exception">
+      <i class="fa fa-chevron-left"></i> 在验证程序输入时使用Notification来替代Exception
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/01/12/refactoring-denpendency-module/" rel="next" title="重构包(模块)之间的依赖关系">
+      重构包(模块)之间的依赖关系 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#栗子"><span class="nav-number">1.</span> <span class="nav-text">栗子</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#新的INFOMATION-SCHEMA表"><span class="nav-number"></span> <span class="nav-text"> 新的INFOMATION_SCHEMA表</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : 'ee02e9c550e670d21b9716f44ac3eecf',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

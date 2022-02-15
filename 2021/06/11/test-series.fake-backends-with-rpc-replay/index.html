@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者我们团队认为我们找到了一个折中的方式来解决这">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用RpcReplay来做服务的Fake实现">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="测试者的窘境我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：       需要一直维护这些Test Double实现 当Test Double的实现与真实实现不一致时，非常容易出Bug 如果我能有个又快又健壮的Test Double实现就好了。 —测试者我们团队认为我们找到了一个折中的方式来解决这">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/light-version-of-recorded-resp.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/request-diff-between-runs.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/remove-nondeterministic-rpc-fields.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/add-nondeterministic-rpc-fields.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png">
+<meta property="og:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png">
+<meta property="article:published_time" content="2021-06-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.304Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="ToTT">
+<meta property="article:tag" content="integration">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://coderfengyun.github.io/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>使用RpcReplay来做服务的Fake实现 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/11/test-series.fake-backends-with-rpc-replay/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用RpcReplay来做服务的Fake实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-11 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-11T00:00:00+08:00">2021-06-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/" itemprop="url" rel="index"><span itemprop="name">ToTT</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/ToTT/TestDouble/" itemprop="url" rel="index"><span itemprop="name">TestDouble</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="测试者的窘境"><a href="#测试者的窘境" class="headerlink" title="测试者的窘境"></a>测试者的窘境</h1><p><img src="/images/test-series.fake-backends-with-rpc-replay/test-author-dilemma.png" alt="测试者的窘境"><br>我想让我的测试跑的飞快! 但是不行，我依赖这么多的服务，我可能得fake，mock，stub这些服务才行。但这些Test Double手段有如下问题：     </p>
+<ul>
+<li>需要一直维护这些Test Double实现</li>
+<li>当Test Double的实现与真实实现不一致时，非常容易出Bug<blockquote>
+<p>如果我能有个又快又健壮的Test Double实现就好了。 —测试者<br>我们团队认为我们找到了一个折中的方式来解决这个问题. 这需要一个接下来会详细介绍的工。但总体来说，我们做的是将这样的测试分成两种模式。第一个模式是对着真实的服务测试，我们将我们自己的服务启动起来，其他依赖的服务也启动起来，然后执行测试，在执行这一类测试的过程中，我们把所有在测试中产生的与我们依赖的服务产生的RPC交互写进RPC LOG。这种方式使得我们可以跑一个轻量版本的测试用例。相对于启动这么多昂贵的服务，我们要做的是启动一个dumb实现。这个dumb实现所做的事就是从RPC日志中读取，并将之前录制的RPC应答重放。你验证的代码还是可以变化的，并且测试用例中的断言还在正常的保护你的待测系统。</p>
+</blockquote>
+</li>
+</ul>
+<h1 id="RpcReplay："><a href="#RpcReplay：" class="headerlink" title="RpcReplay："></a>RpcReplay：</h1><p>将真实实现的入参及出参记录为日志。<br><img src="/images/test-series.fake-backends-with-rpc-replay/record-logs-from-real-impl.png" alt="录制真实服务的日志"></p>
+<p>然后，以录制的日志为基础实现一个轻量级版本的服务，对着TA测试。<br>注意:当你修改了对待测系统的调用参数时,然后待测系统修改了对其他服务的调用参数时,你需要及时更新你的RPC logs。这是唯一的要求。除了会影响请<br>求参数的修改，其他任何时候，都可以对着RPC Log版本的测试用例做提交测试。这类测试是飞快的，因为你不需要真的启动18/32个服务。<br>你试图测试的代码还是不断更新的。<br>当你修改服务的请求时，更新RPC日志。<br>这些日志会被检入到代码仓库里，并且是可读的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/light-version-of-recorded-resp.png" alt="基于日志的轻量版本服务"></p>
+<h2 id="这会不会比较危险？"><a href="#这会不会比较危险？" class="headerlink" title="这会不会比较危险？"></a>这会不会比较危险？</h2><p>Q: 如果真实服务修改了TA的实现怎么办？在这种情况下我们会不是是在对着一个过时的log做测试？<br>A: 如果一个服务修改了接口，这个修改会导致线上故障。举个例子我们依赖服务上线了Version2,但现在我们的测试用例还是对着version1的逻辑写的.因为这逻辑是录制来的，我们现在还在(测试中)使用Version1的逻辑。     </p>
+<p><strong>关键点在于：如果一个服务上线了break了对其他服务承诺的修改，这样的修改会产生线上故障</strong>，所以如果该服务在明天要上线version2，这个修改break了你的服务请求路径，你写的关于你的服务的任何测试都没办法阻止对方做类似的上线。他们可以立刻上线，这会导致所有使用version1协议的其他服务出现故障。在这一点上，你必须要依赖其他团队，因为完备的测试自己的API并在上线前提供一个前移窗口，是他们的责任。当他们把服务升级到version2时,有两个可能：</p>
+<ol>
+<li>这次升级导致了线上故障：这不是你的测试用例需要保护的场景，这是他们的测试用例需要保护的场景。</li>
+<li>另一个可能就是下面要讲的良性修改。</li>
+</ol>
+<h2 id="良性升级服务的响应"><a href="#良性升级服务的响应" class="headerlink" title="良性升级服务的响应"></a>良性升级服务的响应</h2><p>服务修改了实现，但不会修改接口，那么这个修改是良性的。比如说他们修改了数据格式,但对于RPC的返回格式依然保持不变,或是增加了新的元数据(不会影响你的请求).<br>我们会跑一个后台job不断的更新日志。这个方式会使得你用的日志版Fake一直保持最新。    </p>
+<h2 id="请求的每次执行结果会不一样吗？"><a href="#请求的每次执行结果会不一样吗？" class="headerlink" title="请求的每次执行结果会不一样吗？"></a>请求的每次执行结果会不一样吗？</h2><p>十分不幸，是会不一样的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/request-diff-between-runs.png" alt="SUT每次发出的请求不一样"></p>
+<blockquote>
+<p>只要可能就移除非确定性的行为。确定性行为容易理解，重现，debug。</p>
+</blockquote>
+<p>有些信息确实会不一样，比如请求中带了时间戳,id，IP地址等。对于这些非确定性的字段，就需要在录制是过滤掉这些非确定性字段，而在重放时再单独设置。<br><img src="/images/test-series.fake-backends-with-rpc-replay/remove-nondeterministic-rpc-fields.png" alt="录制时去掉非确定性信息"><br><img src="/images/test-series.fake-backends-with-rpc-replay/add-nondeterministic-rpc-fields.png" alt="重放时增加非确定性信息"></p>
+<h2 id="额外的好处"><a href="#额外的好处" class="headerlink" title="额外的好处"></a>额外的好处</h2><p>一个服务挂了，不会影响你的测试。因为你的提交测试(pre-commit test)不依赖于真实的服务，而是依赖于日志版Fake的。<br><img src="/images/test-series.fake-backends-with-rpc-replay/protect-against-broken-dep.png" alt="服务挂了不影响测试"></p>
+<p>如下两张图对比了没有/有RpcReplay时的测试稳定性数据：<br><img src="/images/test-series.fake-backends-with-rpc-replay/before-rpc-replay-after-comp.png" alt="没有/有RpcReplay时的用例稳定性对比"><br>而且执行速度比之前提高了50%！     </p>
+<h1 id="文章翻译自"><a href="#文章翻译自" class="headerlink" title="文章翻译自"></a>文章翻译自</h1><p>GTAC 2015，<a href="https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0" target="_blank" rel="noopener">https://docs.google.com/presentation/d/1IF30CK1z8xzj8xZxJiE7LBQoyzK770yZuBzJR2pfHng/pub?slide=id.gd8dcf688b_0_0</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+              <a href="/tags/ToTT/" rel="tag"># ToTT</a>
+              <a href="/tags/integration/" rel="tag"># integration</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/10/test-series.understanding-your-code-coverage-data/" rel="prev" title="正确理解测试覆盖率数据">
+      <i class="fa fa-chevron-left"></i> 正确理解测试覆盖率数据
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/15/test-series.testing-state-vs-testing-interactions/" rel="next" title="测试状态 V.S. 测试调用">
+      测试状态 V.S. 测试调用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#测试者的窘境"><span class="nav-number">1.</span> <span class="nav-text">测试者的窘境</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RpcReplay："><span class="nav-number">2.</span> <span class="nav-text">RpcReplay：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#这会不会比较危险？"><span class="nav-number">2.1.</span> <span class="nav-text">这会不会比较危险？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#良性升级服务的响应"><span class="nav-number">2.2.</span> <span class="nav-text">良性升级服务的响应</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求的每次执行结果会不一样吗？"><span class="nav-number">2.3.</span> <span class="nav-text">请求的每次执行结果会不一样吗？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#额外的好处"><span class="nav-number">2.4.</span> <span class="nav-text">额外的好处</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文章翻译自"><span class="nav-number">3.</span> <span class="nav-text">文章翻译自</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '8fd3ac31226798d8cdc45367283087df',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

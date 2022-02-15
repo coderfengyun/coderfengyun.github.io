@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"coderfengyun.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Background：Test Case也是代码，但好像又跟真实逻辑中的代码有所不同，那么不同在哪里呢？有这些不同会导致评价测试用例的标准有什么独特之处呢？ 本文试图回答上述两个问题：  Test Case作为代码与业务逻辑代码的异同 Test Case评价的标准  Test Case与业务代码的评价标准有所不同DAMP (“Descriptive and Meaningful Phrases”)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="怎样才能称之为好的测试用例">
+<meta property="og:url" content="http://coderfengyun.github.io/2021/06/07/test-series.how-to-define-good-test/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Background：Test Case也是代码，但好像又跟真实逻辑中的代码有所不同，那么不同在哪里呢？有这些不同会导致评价测试用例的标准有什么独特之处呢？ 本文试图回答上述两个问题：  Test Case作为代码与业务逻辑代码的异同 Test Case评价的标准  Test Case与业务代码的评价标准有所不同DAMP (“Descriptive and Meaningful Phrases”)">
+<meta property="article:published_time" content="2021-06-06T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-07T08:33:16.304Z">
+<meta property="article:author" content="coderfengyun">
+<meta property="article:tag" content="自动化测试">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://coderfengyun.github.io/2021/06/07/test-series.how-to-define-good-test/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>怎样才能称之为好的测试用例 | Hexo</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?35c1319c3dd486215e5e0046e151d588";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://coderfengyun.github.io/2021/06/07/test-series.how-to-define-good-test/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="coderfengyun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          怎样才能称之为好的测试用例
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-06-07 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-07T00:00:00+08:00">2021-06-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-07 16:33:16" itemprop="dateModified" datetime="2022-02-07T16:33:16+08:00">2022-02-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">自动化测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Background："><a href="#Background：" class="headerlink" title="Background："></a>Background：</h1><p>Test Case也是代码，但好像又跟真实逻辑中的代码有所不同，那么不同在哪里呢？有这些不同会导致评价测试用例的标准有什么独特之处呢？</p>
+<p>本文试图回答上述两个问题：</p>
+<ol>
+<li>Test Case作为代码与业务逻辑代码的异同</li>
+<li>Test Case评价的标准</li>
+</ol>
+<h1 id="Test-Case与业务代码的评价标准有所不同"><a href="#Test-Case与业务代码的评价标准有所不同" class="headerlink" title="Test Case与业务代码的评价标准有所不同"></a>Test Case与业务代码的评价标准有所不同</h1><h2 id="DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”"><a href="#DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”" class="headerlink" title="DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)"></a>DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)</h2><p>下面的测试用例遵循了DRY原则(“Don’t Repeat Yourself”)，DRY鼓励代码重用而不是复制，例如通过提出helper方法或者使用循环。但这是一个好的测试用例吗？<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.users = [User(<span class="string">'alice'</span>), User(<span class="string">'bob'</span>)]  # This field can be reused across tests.</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  self._RegisterAllUsers()</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:  # Use a for-loop <span class="keyword">to</span> verify that all<span class="built_in"> users </span>are registered.</span><br><span class="line">    self.assertTrue(self.forum.HasRegisteredUser(user))</span><br><span class="line"></span><br><span class="line">def _RegisterAllUsers(self):  # This method can be reused across tests.</span><br><span class="line">  <span class="keyword">for</span><span class="built_in"> user </span><span class="keyword">in</span> self.users:</span><br><span class="line">    self.forum.Register(user)</span><br></pre></td></tr></table></figure><br>尽管测试的主体还是很简洁的，但读者需要在脑海里做一些运算才能理解这个测试用例的意图，例如，通过从setUp()到_RegisterAllUsers()跟踪self.users的使用流程才能真正理解用例的含义。<strong>因为测试用例没有测试用例来保证了，TA需要保证人能够直观的分析其正确性</strong>，即使是这么搞会带来很多的重复代码。这也意味着尽管DRY是生产代码的最佳实践，但DRY原则是不完全适用于测试用例的编写的。</p>
+<p><strong>在测试用例中我们可以使用DAMP(“Desciptive and Meaningful Phrases”)，DAMP强调可读性高于唯一性</strong>。尽管应用该原则会导致代码重复(例如，重复了简单代码)，但这使得测试用例更容易被认为是”明显没问题”。让我们就这上面的case，用DAMP原则改写一下：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">def setUp(self):</span><br><span class="line">  self.forum = Forum()</span><br><span class="line"></span><br><span class="line">def testCanRegisterMultipleUsers(self):</span><br><span class="line">  # Create the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of relying on<span class="built_in"> users </span>created <span class="keyword">in</span> setUp.</span><br><span class="line">  user1 = User(<span class="string">'alice'</span>)</span><br><span class="line">  user2 = User(<span class="string">'bob'</span>)</span><br><span class="line"></span><br><span class="line">  # Register the<span class="built_in"> users </span><span class="keyword">in</span> the test instead of <span class="keyword">in</span> a helper method, <span class="keyword">and</span> don<span class="string">'t use a for-loop.</span></span><br><span class="line"><span class="string">  self.forum.Register(user1)</span></span><br><span class="line"><span class="string">  self.forum.Register(user2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  # Assert each user individually instead of using a for-loop.</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user1))</span></span><br><span class="line"><span class="string">  self.assertTrue(self.forum.HasRegisteredUser(user2))</span></span><br></pre></td></tr></table></figure>
+<p>注意，<strong>DRY原则在测试中还是有其意义的</strong>；例如，使用一个helper方法来创建value object可以从测试用例的主体逻辑中移除过多的细节，从而提升清晰度。理想情况下，测试用例可以做到既可读又没有重复，但有些时候需要在二者之间做个取舍。<strong>当写测试用例时，如果碰到了需要在DRY与DAMP之间做个选择，首选DAMP</strong>。</p>
+<h2 id="业务代码有测试用例保障，测试用例没有测试用例保障"><a href="#业务代码有测试用例保障，测试用例没有测试用例保障" class="headerlink" title="业务代码有测试用例保障，测试用例没有测试用例保障"></a>业务代码有测试用例保障，测试用例没有测试用例保障</h2><p>如上文中提到的，业务代码有测试用例而测试用例没有测试用例了。这样的差异会导致二者的最终分化。<br>即由于业务代码有测试用例，因此TA的组织形式可以相对复杂，应用各种设计模式，采用DRY原则保证避免散弹式修改，因为TA明白，<strong>其正确性是依赖于测试用例保证的</strong>，而不是依赖人眼保证的。人在业务代码的正确性保证方面做的是<strong>没明显问题</strong><br>测试用例则不然，由于没有测试用例的测试用例保障，因此其<strong>正确性完全依赖于人眼保证</strong>，即Review测试用例需要能够做到<strong>明显没问题</strong>。<br>因此，测试用例越容易被看懂，越容易判断正确性，越好。     </p>
+<h1 id="Test-Case评价的标准"><a href="#Test-Case评价的标准" class="headerlink" title="Test Case评价的标准"></a>Test Case评价的标准</h1><h2 id="测试用例稳定性"><a href="#测试用例稳定性" class="headerlink" title="测试用例稳定性"></a>测试用例稳定性</h2><p>TBD…</p>
+<h2 id="测试用例可读性及明显没问题"><a href="#测试用例可读性及明显没问题" class="headerlink" title="测试用例可读性及明显没问题"></a>测试用例可读性及明显没问题</h2><p>TBD…</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html" target="_blank" rel="noopener">https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/06/test-series.test-behavior-not-implementation/" rel="prev" title="测试行为而不是实现">
+      <i class="fa fa-chevron-left"></i> 测试行为而不是实现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/08/test-series.hermetic-server/" rel="next" title="Hermetic Server">
+      Hermetic Server <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Background："><span class="nav-number">1.</span> <span class="nav-text">Background：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Test-Case与业务代码的评价标准有所不同"><span class="nav-number">2.</span> <span class="nav-text">Test Case与业务代码的评价标准有所不同</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DAMP-“Descriptive-and-Meaningful-Phrases”-V-S-DRY-“Don’t-Repeat-Yourself”"><span class="nav-number">2.1.</span> <span class="nav-text">DAMP (“Descriptive and Meaningful Phrases”) V.S. DRY(“Don’t Repeat Yourself”)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#业务代码有测试用例保障，测试用例没有测试用例保障"><span class="nav-number">2.2.</span> <span class="nav-text">业务代码有测试用例保障，测试用例没有测试用例保障</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Test-Case评价的标准"><span class="nav-number">3.</span> <span class="nav-text">Test Case评价的标准</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#测试用例稳定性"><span class="nav-number">3.1.</span> <span class="nav-text">测试用例稳定性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试用例可读性及明显没问题"><span class="nav-number">3.2.</span> <span class="nav-text">测试用例可读性及明显没问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">coderfengyun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">coderfengyun</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'c997773fd24266bce118',
+      clientSecret: 'cc7288358d3e52413255b40ebd391c4e55210ace',
+      repo        : 'coderfengyun.github.io',
+      owner       : 'coderfengyun',
+      admin       : ['coderfengyun'],
+      id          : '47d096e362399baaf0d109f6486b7648',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
